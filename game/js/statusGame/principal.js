@@ -2,7 +2,7 @@
 
 
     var Game = new Phaser.Game(900, 500, Phaser.AUTO, 'blockGame');
-    var derecha, izquierda,arriba,abajo,cuerpo, disparo, tanque;
+    var derecha, izquierda,arriba,abajo,cuerpo, disparo, tanque, enemigos , angulo;
     var statusFirst = {   
         preload:()=> {
             // CARGA TODO LOS RECURSOS
@@ -12,12 +12,10 @@
         },
         create:()=>{
             // MOSTRSR EN PANTALLA 
-          /*  tanque ={cuerpoTanque=cuerpo,
-            cañonTanque= cañon}*/;  
-            cañon=Game.add.graphics(0,0);
+            cañon=Game.add.graphics(56,395.5);
             cañon.beginFill(0xc5c5c5c5);
             cañon.lineStyle(10,0Xc0c0c0,2);
-            cañon.drawRect(60,390.5 , 130,20);
+            cañon.drawRect(0,0 , 130,20);
             cañon.moveTo(50,50)
             cañon.endFill();
 
@@ -37,17 +35,24 @@
             Game.physics.startSystem(Phaser.Physics.ARCADE);
             Game.physics.arcade.enable(cuerpo);
             Game.physics.arcade.enable(cañon);
-            cañon.body.collideWorldBounds =true;
-            // cañon.anchor.setTo(1);
-            
-            cuerpo.body.collideWorldBounds =true;
-           },
+            // cañon.body.collideWorldBounds =true;
+            // cuerpo.body.collideWorldBounds =true;
+            // cañon.add.sprite(Game.widht/2,Game.height/2)
+            // cañon.anchor.setTo(0.000000005,-2);
+            // cuerpo.body.collideWorldBounds =true;
+         
+        
+        
+         if (angulo = cañon.angle){angulo <= 10}
+                },
         update:()=>{
             // animación del juego;
-           if (derecha.right.isDown) {cañon.position.x +=3; cuerpo.position.x +=3}
-           if (izquierda.left.isDown) {cañon.position.x -=3; cuerpo.position.x -=3}
-           if (arriba.up.isDown) cañon.angle -=0.25;
-           if (arriba.down.isDown) cañon.angle +=0.25;
+           if (derecha.right.isDown) {cañon.position.x +=3, cuerpo.position.x +=3}
+           if (izquierda.left.isDown) {cañon.position.x -=3, cuerpo.position.x -=3}
+              if ((arriba.up.isDown)&&(cañon.angle != -36 )) 
+                cañon.angle -=0.25;
+            if ((arriba.down.isDown)&&(cañon.angle !=10)) 
+                 cañon.angle +=0.25; 
         }
     }; 
 Game.state.add('firts', statusFirst);

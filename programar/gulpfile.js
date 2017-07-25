@@ -3,6 +3,7 @@ const gulp = require('gulp'),
     jshint = require('gulp-jshint'),
     concat = require('gulp-concat'),
     // gamer = require('phaser-ce'),
+    stylus= require('gulp-stylus');
     browser = require('browser-sync').create(),
     error = require('gulp-plumber');
 // Correccion del control de  tareas
@@ -42,10 +43,19 @@ gulp.task('pug',()=> {
         .pipe(gulp.dest('../Game/'))
         .pipe(browser.reload({ stream: true }));
 });
+gulp.task('style', ()=> {
+    gulp.src('./documento/style.styl')
+        .pipe(error())
+        .pipe(stylus('stylus'))
+        .pipe(error.stop())
+        .pipe(gulp.dest('../Game/css/'))
+        .pipe(browser.reload({ stream: true }));
+});
 
 //tarea de atomatizacion
-gulp.task('default', ['servidor','js', 'errorGulp', 'pug'], () => {
+gulp.task('default', ['servidor','js', 'errorGulp', 'pug', 'style' ], () => {
     gulp.watch('statusGame/*.js', ['js']);
     gulp.watch('./documento/*.pug', ['pug']);
+    gulp.watch('./documento/*.styl', ['style']);
     gulp.watch('./gulpfile.js', ['errorGulp']);
 });

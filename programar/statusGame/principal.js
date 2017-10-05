@@ -1,6 +1,5 @@
-
     var Game = new Phaser.Game(900, 500, Phaser.AUTO, 'blockGame');
-    var derecha, izquierda,arriba,abajo,cuerpo, disparo, tanque, enemigos , angulo;
+    var derecha, izquierda,arriba,abajo,cuerpo, disparo, tanque, enemigos , bala ;
     var statusFirst = {   
         preload:()=> {
             // CARGA TODO LOS RECURSOS
@@ -10,20 +9,20 @@
         },
         create:()=>{
             // MOSTRSR EN PANTALLA 
+        
             cañon=Game.add.graphics(56,395.5);
             cañon.beginFill(0xc5c5c5c5);
             cañon.lineStyle(10,0Xc0c0c0,2);
             cañon.drawRect(0,0 , 130,20);
             cañon.moveTo(50,50)
             cañon.endFill();
-
+                
             cuerpo = Game.add.graphics(0,0);
             cuerpo.beginFill(0xc5c5c5);
             cuerpo.lineStyle(10,0Xc0c0c0,2);
             cuerpo.drawRect(40,380, 50,50);
             cuerpo.drawRect(1,430, 130,50);
             cuerpo.endFill();
-            
             // mover el tanque
             derecha = Game.input.keyboard.createCursorKeys();   
             izquierda = Game.input.keyboard.createCursorKeys();

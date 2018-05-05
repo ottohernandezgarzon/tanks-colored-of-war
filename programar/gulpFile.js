@@ -2,8 +2,8 @@ const gulp  = require('gulp'),
       html  = require('gulp-pug'),
       style = require('gulp-stylus'),
       error = require('gulp-plumber'),
-      reload =require('browser-sync').create(),
-      jsError=require('gulp-jslint');
+      reload = require('browser-sync').create(),
+      jsError = require('gulp-jslint');
 
 // Crear el html
 gulp.task('html', () => {
@@ -37,10 +37,10 @@ gulp.task('Sync', ()=>{
 //Corregir Javascript
 gulp.task('js',()=>{
     gulp.src('./js/*.js')
-        .pipe(jsError())
-        .pipe(jsError.reporter('default', errosOnly))
-        .pipe(jsError.reporter('stylish', options))
-        .pipe(gulp.dest('folder'));
+        .pipe(error())
+        .pipe(error.stop())
+        .pipe(gulp.dest('../Game/js/statusGame/'))
+        .pipe(reload.stream());
 });
 // Corregir a gulp
 gulp.task('gulp', ()=> {

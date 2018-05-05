@@ -12,15 +12,15 @@
         },
         create:()=>{
             // MOSTRSR EN PANTALLA 
-          /*  tanque ={cuerpoTanque=cuerpo,
-            cañonTanque= cañon}*/  
-            cañon=Game.add.graphics(0,0);
+        // cuerpo del tanque   
+            cañon=Game.add.graphics(0,393.5);
             cañon.beginFill(0xc5c5c5c5);
             cañon.lineStyle(10,0Xc0c0c0,2);
-            cañon.drawRect(60,390.5 , 130,20);
-            cañon.moveTo(50,50)
+            cañon.drawRect(60,0,130,20);
+            cañon.moveTo(60,0)
             cañon.endFill();
-
+            
+            // cuerpo del tanque   
             cuerpo = Game.add.graphics(0,0);
             cuerpo.beginFill(0xc5c5c5);
             cuerpo.lineStyle(10,0Xc0c0c0,2);
@@ -44,10 +44,10 @@
            },
         update:()=>{
             // animación del juego;
-           if (derecha.right.isDown) {cañon.position.x +=3; cuerpo.position.x +=3}
+           if (derecha.right.isDown) {cañon.position.x +=3 ; cuerpo.position.x +=3}
            if (izquierda.left.isDown) {cañon.position.x -=3; cuerpo.position.x -=3}
-           if (arriba.up.isDown) cañon.angle -=2;
-           if (arriba.down.isDown) cañon.angle +=2;
+           if (arriba.up.isDown) cañon.angle -= 1 && cañon.angle >= -8.5  ;
+           if (arriba.down.isDown) cañon.angle +=1 && cañon.angle <= 5.5;
         }
     }; 
 Game.state.add('firts', statusFirst);

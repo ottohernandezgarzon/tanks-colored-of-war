@@ -6,7 +6,7 @@
         {
             "label": "Gulp",
             "type": "shell",
-            "command": "gulp --cwd programar -b "
+            "command": "gulp --cwd programar"
         }
     ]
 }

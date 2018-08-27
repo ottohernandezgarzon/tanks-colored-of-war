@@ -1,6 +1,3 @@
-
-
-
     var Game = new Phaser.Game(900, 500, Phaser.AUTO, 'blockGame');
     var derecha, izquierda,arriba,abajo,cuerpo, disparo, tanque;
     var statusFirst = {   

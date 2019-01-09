@@ -13,7 +13,8 @@
 * @param {number} id - The ID of the Pointer object within the game. Each game can have up to 10 active pointers.
 * @param {Phaser.PointerMode} pointerMode=(CURSOR|CONTACT) - The operational mode of this pointer, eg. CURSOR or CONTACT.
 */
-Phaser.Pointer = function (game, id, pointerMode) {
+Phaser.Pointer = function (game, id, pointerMode)
+{
 
     /**
     * @property {Phaser.Game} game - A reference to the currently running game.
@@ -206,25 +207,27 @@ Phaser.Pointer = function (game, id, pointerMode) {
     this.screenY = -1;
 
     /**
-    * @property {number} rawMovementX - The horizontal raw relative movement of the Pointer in pixels since last event.
+    * @property {number} rawMovementX - The horizontal raw relative movement of the Pointer in pixels at the last event, if this is a Mouse Pointer in a locked state.
     * @default
+    * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
     */
     this.rawMovementX = 0;
 
     /**
-    * @property {number} rawMovementY - The vertical raw relative movement of the Pointer in pixels since last event.
+    * @property {number} rawMovementY - The vertical raw relative movement of the Pointer in pixels at the last event, if this is a Mouse Pointer in a locked state.
     * @default
+    * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
     */
     this.rawMovementY = 0;
 
     /**
-    * @property {number} movementX - The horizontal processed relative movement of the Pointer in pixels since last event.
+    * @property {number} movementX - The cumulative horizontal relative movement of the Pointer in pixels since resetMovement() was called, if this is a Mouse Pointer in a locked state.
     * @default
     */
     this.movementX = 0;
 
     /**
-    * @property {number} movementY - The vertical processed relative movement of the Pointer in pixels since last event.
+    * @property {number} movementY - The cumulative vertical relative movement of the Pointer in pixels since resetMovement() was called, if this is a Mouse Pointer in a locked state..
     * @default
     */
     this.movementY = 0;
@@ -419,7 +422,8 @@ Phaser.Pointer.prototype = {
     * @method Phaser.Pointer#resetButtons
     * @protected
     */
-    resetButtons: function () {
+    resetButtons: function ()
+    {
 
         this.isDown = false;
         this.isUp = true;
@@ -444,7 +448,8 @@ Phaser.Pointer.prototype = {
     * @param {integer} button - {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button MouseEvent#button} value.
     * @param {MouseEvent} event - The DOM event.
     */
-    processButtonsDown: function (button, event) {
+    processButtonsDown: function (button, event)
+    {
 
         //  Note: These are bitwise checks, not booleans
 
@@ -483,7 +488,8 @@ Phaser.Pointer.prototype = {
     * @param {integer} button - {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button MouseEvent#button} value.
     * @param {MouseEvent} event - The DOM event.
     */
-    processButtonsUp: function (button, event) {
+    processButtonsUp: function (button, event)
+    {
 
         //  Note: These are bitwise checks, not booleans
 
@@ -522,7 +528,8 @@ Phaser.Pointer.prototype = {
     * @param {integer} buttons - {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons MouseEvent#buttons} value.
     * @param {MouseEvent} event - The DOM event.
     */
-    processButtonsUpDown: function (buttons, event) {
+    processButtonsUpDown: function (buttons, event)
+    {
 
         var down = (event.type.toLowerCase().substr(-4) === 'down');
         var move = (event.type.toLowerCase().substr(-4) === 'move');
@@ -555,36 +562,32 @@ Phaser.Pointer.prototype = {
                     this.rightButton.start(event);
                 }
                 else
+                if (down)
                 {
-                    if (down)
-                    {
-                        this.processButtonsDown(event.button, event);
-                    }
-                    else if (!move)
-                    {
-                        this.processButtonsUp(event.button, event);
-                    }
+                    this.processButtonsDown(event.button, event);
+                }
+                else if (!move)
+                {
+                    this.processButtonsUp(event.button, event);
+                }
+            }
+            else
+            if (down)
+            {
+                // On OS X (and other devices with trackpads) you have to press CTRL + the pad to initiate a right-click event.
+                if (event.ctrlKey)
+                {
+                    this.rightButton.start(event);
+                }
+                else
+                {
+                    this.leftButton.start(event);
                 }
             }
             else
             {
-                if (down)
-                {
-                    // On OS X (and other devices with trackpads) you have to press CTRL + the pad to initiate a right-click event.
-                    if (event.ctrlKey)
-                    {
-                        this.rightButton.start(event);
-                    }
-                    else
-                    {
-                        this.leftButton.start(event);
-                    }
-                }
-                else
-                {
-                    this.leftButton.stop(event);
-                    this.rightButton.stop(event);
-                }
+                this.leftButton.stop(event);
+                this.rightButton.stop(event);
             }
         }
 
@@ -598,7 +601,8 @@ Phaser.Pointer.prototype = {
     * @protected
     * @param {MouseEvent} event - The DOM event.
     */
-    updateButtons: function (event) {
+    updateButtons: function (event)
+    {
 
         this.button = event.button;
         this.processButtonsUpDown(event.buttons, event);
@@ -619,11 +623,12 @@ Phaser.Pointer.prototype = {
     * @method Phaser.Pointer#start
     * @param {any} event - The DOM event from the browser.
     */
-    start: function (event) {
+    start: function (event)
+    {
 
         var input = this.game.input;
 
-        if (event['pointerId'])
+        if (event.pointerId)
         {
             this.pointerId = event.pointerId;
         }
@@ -688,7 +693,8 @@ Phaser.Pointer.prototype = {
     * Called by the Input Manager.
     * @method Phaser.Pointer#update
     */
-    update: function () {
+    update: function ()
+    {
 
         var input = this.game.input;
 
@@ -743,7 +749,8 @@ Phaser.Pointer.prototype = {
     * @param {MouseEvent|PointerEvent|TouchEvent} event - The event passed up from the input handler.
     * @param {boolean} [fromClick=false] - Was this called from the click event?
     */
-    move: function (event, fromClick) {
+    move: function (event, fromClick)
+    {
 
         var input = this.game.input;
 
@@ -807,7 +814,7 @@ Phaser.Pointer.prototype = {
 
         while (i--)
         {
-            input.moveCallbacks[i].callback.call(input.moveCallbacks[i].context, this, this.x, this.y, fromClick);
+            input.moveCallbacks[i].callback.call(input.moveCallbacks[i].context, this, this.x, this.y, fromClick, event);
         }
 
         //  Easy out if we're dragging something and it still exists
@@ -835,7 +842,8 @@ Phaser.Pointer.prototype = {
     * @param {boolean} [fromClick=false] - Was this called from the click event?
     * @return {boolean} True if this method processes an object (i.e. a Sprite becomes the Pointers currentTarget), otherwise false.
     */
-    processInteractiveObjects: function (fromClick) {
+    processInteractiveObjects: function (fromClick)
+    {
 
         //  Work out which object is on the top
         var highestRenderOrderID = 0;
@@ -919,7 +927,8 @@ Phaser.Pointer.prototype = {
     * @param {Phaser.InputHandler} newTarget - The new target for this Pointer. Note this is an `InputHandler`, so don't pass a Sprite, instead pass `sprite.input` to it.
     * @param {boolean} [silent=false] - If true the new target AND the old one will NOT dispatch their `onInputOver` or `onInputOut` events.
     */
-    swapTarget: function (newTarget, silent) {
+    swapTarget: function (newTarget, silent)
+    {
 
         if (silent === undefined) { silent = false; }
 
@@ -934,33 +943,31 @@ Phaser.Pointer.prototype = {
             }
         }
         else
+        if (this.targetObject === null)
         {
-            if (this.targetObject === null)
+            //  And now set the new one
+            this.targetObject = newTarget;
+            newTarget._pointerOverHandler(this, silent);
+        }
+        else
+        {
+            //  We've got a target from the last update
+            if (this.targetObject === newTarget)
             {
-                //  And now set the new one
-                this.targetObject = newTarget;
-                newTarget._pointerOverHandler(this, silent);
+                //  Same target as before, so update it
+                if (newTarget.update(this) === false)
+                {
+                    this.targetObject = null;
+                }
             }
             else
             {
-                //  We've got a target from the last update
-                if (this.targetObject === newTarget)
-                {
-                    //  Same target as before, so update it
-                    if (newTarget.update(this) === false)
-                    {
-                        this.targetObject = null;
-                    }
-                }
-                else
-                {
-                    //  The target has changed, so tell the old one we've left it
-                    this.targetObject._pointerOutHandler(this, silent);
+                //  The target has changed, so tell the old one we've left it
+                this.targetObject._pointerOutHandler(this, silent);
 
-                    //  And now set the new one
-                    this.targetObject = newTarget;
-                    this.targetObject._pointerOverHandler(this, silent);
-                }
+                //  And now set the new one
+                this.targetObject = newTarget;
+                this.targetObject._pointerOverHandler(this, silent);
             }
         }
 
@@ -972,7 +979,8 @@ Phaser.Pointer.prototype = {
     * @method Phaser.Pointer#leave
     * @param {MouseEvent|PointerEvent|TouchEvent} event - The event passed up from the input handler.
     */
-    leave: function (event) {
+    leave: function (event)
+    {
 
         this.withinGame = false;
         this.move(event, false);
@@ -985,7 +993,8 @@ Phaser.Pointer.prototype = {
     * @method Phaser.Pointer#stop
     * @param {MouseEvent|PointerEvent|TouchEvent} event - The event passed up from the input handler.
     */
-    stop: function (event) {
+    stop: function (event)
+    {
 
         var input = this.game.input;
 
@@ -1007,16 +1016,9 @@ Phaser.Pointer.prototype = {
             if (this.duration >= 0 && this.duration <= input.tapRate)
             {
                 //  Was it a double-tap?
-                if (this.timeUp - this.previousTapTime < input.doubleTapRate)
-                {
-                    //  Yes, let's dispatch the signal then with the 2nd parameter set to true
-                    input.onTap.dispatch(this, true);
-                }
-                else
-                {
-                    //  Wasn't a double-tap, so dispatch a single tap signal
-                    input.onTap.dispatch(this, false);
-                }
+                var doubleTap = (this.timeUp - this.previousTapTime < input.doubleTapRate);
+
+                input.onTap.dispatch(this, doubleTap, event);
 
                 this.previousTapTime = this.timeUp;
             }
@@ -1070,7 +1072,8 @@ Phaser.Pointer.prototype = {
     * @param {number} [duration] - The time to check against. If none given it will use InputManager.justPressedRate.
     * @return {boolean} true if the Pointer was pressed down within the duration given.
     */
-    justPressed: function (duration) {
+    justPressed: function (duration)
+    {
 
         duration = duration || this.game.input.justPressedRate;
 
@@ -1086,7 +1089,8 @@ Phaser.Pointer.prototype = {
     * @param {number} [duration] - The time to check against. If none given it will use InputManager.justReleasedRate.
     * @return {boolean} true if the Pointer was released within the duration given.
     */
-    justReleased: function (duration) {
+    justReleased: function (duration)
+    {
 
         duration = duration || this.game.input.justReleasedRate;
 
@@ -1111,7 +1115,8 @@ Phaser.Pointer.prototype = {
     * @param {object} callbackContext - Context of the callback.
     * @param {object[]|null} callbackArgs - Additional callback args, if any. Supplied as an array.
     */
-    addClickTrampoline: function (name, callback, callbackContext, callbackArgs) {
+    addClickTrampoline: function (name, callback, callbackContext, callbackArgs)
+    {
 
         if (!this.isDown)
         {
@@ -1144,7 +1149,8 @@ Phaser.Pointer.prototype = {
     * @method Phaser.Pointer#processClickTrampolines
     * @private
     */
-    processClickTrampolines: function () {
+    processClickTrampolines: function ()
+    {
 
         var trampolines = this._clickTrampolines;
 
@@ -1172,7 +1178,8 @@ Phaser.Pointer.prototype = {
     * Resets the Pointer properties. Called by InputManager.reset when you perform a State change.
     * @method Phaser.Pointer#reset
     */
-    reset: function () {
+    reset: function ()
+    {
 
         if (this.isMouse === false)
         {
@@ -1202,7 +1209,8 @@ Phaser.Pointer.prototype = {
      * Resets the movementX and movementY properties. Use in your update handler after retrieving the values.
      * @method Phaser.Pointer#resetMovement
      */
-    resetMovement: function() {
+    resetMovement: function ()
+    {
 
         this.movementX = 0;
         this.movementY = 0;
@@ -1222,9 +1230,10 @@ Phaser.Pointer.prototype.constructor = Phaser.Pointer;
 * @property {number} duration
 * @readonly
 */
-Object.defineProperty(Phaser.Pointer.prototype, "duration", {
+Object.defineProperty(Phaser.Pointer.prototype, 'duration', {
 
-    get: function () {
+    get: function ()
+    {
 
         if (this.isUp)
         {
@@ -1243,9 +1252,10 @@ Object.defineProperty(Phaser.Pointer.prototype, "duration", {
 * @property {number} worldX - The X value of this Pointer in world coordinates based on the world camera.
 * @readonly
 */
-Object.defineProperty(Phaser.Pointer.prototype, "worldX", {
+Object.defineProperty(Phaser.Pointer.prototype, 'worldX', {
 
-    get: function () {
+    get: function ()
+    {
 
         return this.game.world.camera.x + this.x;
 
@@ -1259,9 +1269,10 @@ Object.defineProperty(Phaser.Pointer.prototype, "worldX", {
 * @property {number} worldY - The Y value of this Pointer in world coordinates based on the world camera.
 * @readonly
 */
-Object.defineProperty(Phaser.Pointer.prototype, "worldY", {
+Object.defineProperty(Phaser.Pointer.prototype, 'worldY', {
 
-    get: function () {
+    get: function ()
+    {
 
         return this.game.world.camera.y + this.y;
 
@@ -1297,3 +1308,9 @@ Phaser.PointerMode = {
     CONTACT: 1 << 1
 
 };
+
+Phaser.PointerModes = {};
+
+Phaser.PointerModes[Phaser.PointerMode.CURSOR] = 'CURSOR';
+
+Phaser.PointerModes[Phaser.PointerMode.CONTACT] = 'CONTACT';

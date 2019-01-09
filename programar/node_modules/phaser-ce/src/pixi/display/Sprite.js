@@ -10,7 +10,8 @@
  * @constructor
  * @param texture {Texture} The texture for this sprite
  */
-PIXI.Sprite = function (texture) {
+PIXI.Sprite = function (texture)
+{
 
     PIXI.DisplayObjectContainer.call(this);
 
@@ -139,11 +140,13 @@ PIXI.Sprite.prototype.constructor = PIXI.Sprite;
  */
 Object.defineProperty(PIXI.Sprite.prototype, 'width', {
 
-    get: function() {
+    get: function ()
+    {
         return this.scale.x * this.texture.frame.width;
     },
 
-    set: function(value) {
+    set: function (value)
+    {
         this.scale.x = value / this.texture.frame.width;
         this._width = value;
     }
@@ -158,11 +161,13 @@ Object.defineProperty(PIXI.Sprite.prototype, 'width', {
  */
 Object.defineProperty(PIXI.Sprite.prototype, 'height', {
 
-    get: function() {
-        return  this.scale.y * this.texture.frame.height;
+    get: function ()
+    {
+        return this.scale.y * this.texture.frame.height;
     },
 
-    set: function(value) {
+    set: function (value)
+    {
         this.scale.y = value / this.texture.frame.height;
         this._height = value;
     }
@@ -177,7 +182,7 @@ Object.defineProperty(PIXI.Sprite.prototype, 'height', {
  * @param texture {Texture} The PIXI texture that is displayed by the sprite
  * @param [destroy=false] {boolean} Call Texture.destroy on the current texture before replacing it with the new one?
  */
-PIXI.Sprite.prototype.setTexture = function(texture, destroyBase)
+PIXI.Sprite.prototype.setTexture = function (texture, destroyBase)
 {
     if (destroyBase)
     {
@@ -198,37 +203,36 @@ PIXI.Sprite.prototype.setTexture = function(texture, destroyBase)
  * @param event
  * @private
  */
-PIXI.Sprite.prototype.onTextureUpdate = function()
+PIXI.Sprite.prototype.onTextureUpdate = function ()
 {
     // so if _width is 0 then width was not set..
-    if (this._width) this.scale.x = this._width / this.texture.frame.width;
-    if (this._height) this.scale.y = this._height / this.texture.frame.height;
+    if (this._width) { this.scale.x = this._width / this.texture.frame.width; }
+    if (this._height) { this.scale.y = this._height / this.texture.frame.height; }
 };
 
 /**
 * Returns the bounds of the Sprite as a rectangle.
 * The bounds calculation takes the worldTransform into account.
 *
-* It is important to note that the transform is not updated when you call this method.
-* So if this Sprite is the child of a Display Object which has had its transform
-* updated since the last render pass, those changes will not yet have been applied
-* to this Sprites worldTransform. If you need to ensure that all parent transforms
-* are factored into this getBounds operation then you should call `updateTransform`
-* on the root most object in this Sprites display list first.
+* The worldTransform was calculated during the last render pass and is not updated when you call this method.
+* If this Sprite was just created and has never been rendered, you can call `updateTransform` on the Sprite itself.
+* If any of the Sprite's ancestors have been positioned, scaled, or rotated since the last render pass,
+* those changes have not yet have been applied to this Sprite's worldTransform. Call `updateTransform`
+* on the root-most (highest) ancestor that was changed.
 *
 * @method PIXI.Sprite#getBounds
 * @param matrix {Matrix} the transformation matrix of the sprite
 * @return {Rectangle} the framing rectangle
 */
-PIXI.Sprite.prototype.getBounds = function(matrix)
+PIXI.Sprite.prototype.getBounds = function (matrix)
 {
     var width = this.texture.frame.width;
     var height = this.texture.frame.height;
 
-    var w0 = width * (1-this.anchor.x);
+    var w0 = width * (1 - this.anchor.x);
     var w1 = width * -this.anchor.x;
 
-    var h0 = height * (1-this.anchor.y);
+    var h0 = height * (1 - this.anchor.y);
     var h1 = height * -this.anchor.y;
 
     var worldTransform = matrix || this.worldTransform;
@@ -283,8 +287,8 @@ PIXI.Sprite.prototype.getBounds = function(matrix)
         var x3 = a * w0 + c * h0 + tx;
         var y3 = d * h0 + b * w0 + ty;
 
-        var x4 =  a * w1 + c * h0 + tx;
-        var y4 =  d * h0 + b * w1 + ty;
+        var x4 = a * w1 + c * h0 + tx;
+        var y4 = d * h0 + b * w1 + ty;
 
         minX = x1 < minX ? x1 : minX;
         minX = x2 < minX ? x2 : minX;
@@ -327,7 +331,8 @@ PIXI.Sprite.prototype.getBounds = function(matrix)
  * @method PIXI.Sprite#getLocalBounds
  * @return {Rectangle} The rectangular bounding area
  */
-PIXI.Sprite.prototype.getLocalBounds = function () {
+PIXI.Sprite.prototype.getLocalBounds = function ()
+{
 
     var matrixCache = this.worldTransform;
 
@@ -359,10 +364,10 @@ PIXI.Sprite.prototype.getLocalBounds = function () {
 * @param {Matrix} [matrix] - Optional matrix. If provided the Display Object will be rendered using this matrix, otherwise it will use its worldTransform.
 * @private
 */
-PIXI.Sprite.prototype._renderWebGL = function(renderSession, matrix)
+PIXI.Sprite.prototype._renderWebGL = function (renderSession, matrix)
 {
     // if the sprite is not visible or the alpha is 0 then no need to render this element
-    if (!this.visible || this.alpha <= 0 || !this.renderable) return;
+    if (!this.visible || this.alpha <= 0 || !this.renderable) { return; }
 
     //  They provided an alternative rendering matrix, so use it
     var wt = this.worldTransform;
@@ -403,8 +408,8 @@ PIXI.Sprite.prototype._renderWebGL = function(renderSession, matrix)
         // time to stop the sprite batch as either a mask element or a filter draw will happen next
         spriteBatch.stop();
 
-        if (this._mask) renderSession.maskManager.popMask(this._mask, renderSession);
-        if (this._filters) renderSession.filterManager.popFilter();
+        if (this._mask) { renderSession.maskManager.popMask(this._mask, renderSession); }
+        if (this._filters) { renderSession.filterManager.popFilter(); }
 
         spriteBatch.start();
     }
@@ -429,10 +434,10 @@ PIXI.Sprite.prototype._renderWebGL = function(renderSession, matrix)
 * @param {Matrix} [matrix] - Optional matrix. If provided the Display Object will be rendered using this matrix, otherwise it will use its worldTransform.
 * @private
 */
-PIXI.Sprite.prototype._renderCanvas = function(renderSession, matrix)
+PIXI.Sprite.prototype._renderCanvas = function (renderSession, matrix)
 {
     // If the sprite is not visible or the alpha is 0 then no need to render this element
-    if (!this.visible || this.alpha === 0 || !this.renderable || this.texture.crop.width <= 0 || this.texture.crop.height <= 0)
+    if (!this.visible || this.alpha === 0 || !this.renderable || this.texture.crop.width < 1 || this.texture.crop.height < 1)
     {
         return;
     }
@@ -533,6 +538,14 @@ PIXI.Sprite.prototype._renderCanvas = function(renderSession, matrix)
     dx /= resolution;
     dy /= resolution;
 
+    cw |= 0;
+    ch |= 0;
+
+    if (!cw || !ch)
+    {
+        return;
+    }
+
     if (this.tint !== 0xFFFFFF)
     {
         if (this.texture.requiresReTint || this.cachedTint !== this.tint)
@@ -549,9 +562,6 @@ PIXI.Sprite.prototype._renderCanvas = function(renderSession, matrix)
     {
         var cx = this.texture.crop.x;
         var cy = this.texture.crop.y;
-
-        cw = Math.floor(cw)
-        ch = Math.floor(ch)
 
         renderSession.context.drawImage(this.texture.baseTexture.source, cx, cy, cw, ch, dx, dy, cw / resolution, ch / resolution);
     }

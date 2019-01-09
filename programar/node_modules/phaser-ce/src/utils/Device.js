@@ -1,3 +1,4 @@
+/* eslint-env browser, node */
 /**
 * @author       Richard Davey <rich@photonstorm.com>
 * @copyright    2016 Photon Storm Ltd.
@@ -38,7 +39,8 @@
 * @class
 * @protected
 */
-Phaser.Device = function () {
+Phaser.Device = function ()
+{
 
     /**
     * The time the device became ready.
@@ -586,7 +588,8 @@ Phaser.Device.onInitialized = new Phaser.Signal();
 * @param {object} [context] - Context in which to invoke the handler
 * @param {boolean} [nonPrimer=false] - If true the device ready check will not be started.
 */
-Phaser.Device.whenReady = function (callback, context, nonPrimer) {
+Phaser.Device.whenReady = function (callback, context, nonPrimer)
+{
 
     var readyCheck = this._readyCheck;
 
@@ -597,16 +600,16 @@ Phaser.Device.whenReady = function (callback, context, nonPrimer) {
     else if (readyCheck._monitor || nonPrimer)
     {
         readyCheck._queue = readyCheck._queue || [];
-        readyCheck._queue.push([callback, context]);
+        readyCheck._queue.push([ callback, context ]);
     }
     else
     {
         readyCheck._monitor = readyCheck.bind(this);
         readyCheck._queue = readyCheck._queue || [];
-        readyCheck._queue.push([callback, context]);
+        readyCheck._queue.push([ callback, context ]);
 
         var cordova = typeof window.cordova !== 'undefined';
-        var cocoonJS = navigator['isCocoonJS'];
+        var cocoonJS = navigator.isCocoonJS;
 
         if (document.readyState === 'complete' || document.readyState === 'interactive')
         {
@@ -635,7 +638,8 @@ Phaser.Device.whenReady = function (callback, context, nonPrimer) {
 * @method
 * @private
 */
-Phaser.Device._readyCheck = function () {
+Phaser.Device._readyCheck = function ()
+{
 
     var readyCheck = this._readyCheck;
 
@@ -679,14 +683,16 @@ Phaser.Device._readyCheck = function () {
 * @method
 * @private
 */
-Phaser.Device._initialize = function () {
+Phaser.Device._initialize = function ()
+{
 
     var device = this;
 
     /**
     * Check which OS is game running on.
     */
-    function _checkOS () {
+    function _checkOS ()
+    {
 
         var ua = navigator.userAgent;
 
@@ -694,9 +700,10 @@ Phaser.Device._initialize = function () {
         {
             device.vita = true;
         }
-        else if (/Kindle/.test(ua) || /\bKF[A-Z][A-Z]+/.test(ua) || /Silk.*Mobile Safari/.test(ua))
+        else if (/Kindle/.test(ua) || (/\bKF[A-Z][A-Z]+/).test(ua) || (/Silk.*Mobile Safari/).test(ua))
         {
             device.kindle = true;
+
             // This will NOT detect early generations of Kindle Fire, I think there is no reliable way...
             // E.g. "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-us; Silk/1.1.0-80) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16 Silk-Accelerated=true"
         }
@@ -727,7 +734,7 @@ Phaser.Device._initialize = function () {
             device.windows = true;
         }
 
-        if (/Windows Phone/i.test(ua) || /IEMobile/i.test(ua))
+        if (/Windows Phone/i.test(ua) || (/IEMobile/i).test(ua))
         {
             device.android = false;
             device.iOS = false;
@@ -736,7 +743,7 @@ Phaser.Device._initialize = function () {
             device.windowsPhone = true;
         }
 
-        var silk = /Silk/.test(ua); // detected in browsers
+        var silk = (/Silk/).test(ua); // detected in browsers
 
         if (device.windows || device.macOS || (device.linux && !silk) || device.chromeOS)
         {
@@ -756,7 +763,8 @@ Phaser.Device._initialize = function () {
     * If the browser isn't capable of handling tinting with alpha, `Device.canHandleAlpha` will be false.
     * Also checks whether the Canvas BlendModes are supported by the current browser for drawImage.
     */
-    function _checkCanvasFeatures () {
+    function _checkCanvasFeatures ()
+    {
 
         var canvas = Phaser.CanvasPool.create(this, 6, 1);
         var context = canvas.getContext('2d');
@@ -799,24 +807,40 @@ Phaser.Device._initialize = function () {
     /**
     * Check HTML5 features of the host environment.
     */
-    function _checkFeatures () {
+    function _checkFeatures ()
+    {
 
-        device.canvas = !!window['CanvasRenderingContext2D'] || device.cocoonJS;
+        device.canvas = !!window.CanvasRenderingContext2D || device.cocoonJS;
 
-        try {
+        try
+        {
             device.localStorage = !!localStorage.getItem;
-        } catch (error) {
+        }
+        catch (error)
+        {
             device.localStorage = false;
         }
 
-        device.file = !!window['File'] && !!window['FileReader'] && !!window['FileList'] && !!window['Blob'];
-        device.fileSystem = !!window['requestFileSystem'];
+        device.file = !!window.File && !!window.FileReader && !!window.FileList && !!window.Blob;
+        device.fileSystem = !!window.requestFileSystem;
 
         device.webGL = !!window.WebGLRenderingContext;
 
-        device.worker = !!window['Worker'];
+        device.worker = !!window.Worker;
 
-        device.pointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+        device.pointerLockElement = (('pointerLockElement' in document) && 'pointerLockElement') ||
+            (('mozPointerLockElement' in document) && 'mozPointerLockElement') ||
+            (('webkitPointerLockElement' in document) && 'webkitPointerLockElement');
+
+        device.pointerlockchange = (('onpointerlockchange' in document) && 'pointerlockchange') ||
+            (('onmozpointerlockchange' in document) && 'mozpointerlockchange') ||
+            (('onwebkitpointerlockchange' in document) && 'webkitpointerlockchange');
+
+        device.pointerlockerror = (('onpointerlockerror' in document) && 'pointerlockerror') ||
+            (('onmozpointerlockerror' in document) && 'mozpointerlockerror') ||
+            (('onwebkitpointerlockerror' in document) && 'webkitpointerlockerror');
+
+        device.pointerLock = !!device.pointerLockElement;
 
         device.quirksMode = (document.compatMode === 'CSS1Compat') ? false : true;
 
@@ -852,7 +876,8 @@ Phaser.Device._initialize = function () {
     /**
     * Checks/configures various input.
     */
-    function _checkInput () {
+    function _checkInput ()
+    {
 
         if ('ontouchstart' in document.documentElement || (window.navigator.maxTouchPoints && window.navigator.maxTouchPoints >= 1))
         {
@@ -889,7 +914,8 @@ Phaser.Device._initialize = function () {
     /**
     * Checks for support of the Full Screen API.
     */
-    function _checkFullScreenSupport () {
+    function _checkFullScreenSupport ()
+    {
 
         var fs = [
             'requestFullscreen',
@@ -938,7 +964,7 @@ Phaser.Device._initialize = function () {
         }
 
         //  Keyboard Input?
-        if (window['Element'] && Element['ALLOW_KEYBOARD_INPUT'])
+        if (window.Element && Element.ALLOW_KEYBOARD_INPUT)
         {
             device.fullscreenKeyboard = true;
         }
@@ -948,7 +974,8 @@ Phaser.Device._initialize = function () {
     /**
     * Check what browser is game running in.
     */
-    function _checkBrowser () {
+    function _checkBrowser ()
+    {
 
         var ua = navigator.userAgent;
 
@@ -1015,7 +1042,7 @@ Phaser.Device._initialize = function () {
         }
 
         //  WebApp mode in iOS
-        if (navigator['standalone'])
+        if (navigator.standalone)
         {
             device.webApp = true;
         }
@@ -1037,14 +1064,15 @@ Phaser.Device._initialize = function () {
             device.electron = !!process.versions.electron;
         }
 
-        if (navigator['isCocoonJS'])
+        if (navigator.isCocoonJS)
         {
             device.cocoonJS = true;
         }
 
         if (device.cocoonJS)
         {
-            try {
+            try
+            {
                 device.cocoonJSApp = (typeof CocoonJS !== 'undefined');
             }
             catch(error)
@@ -1068,13 +1096,14 @@ Phaser.Device._initialize = function () {
     /**
     * Check video support.
     */
-    function _checkVideo () {
+    function _checkVideo ()
+    {
 
-        var videoElement = document.createElement("video");
-        var result = false;
+        var videoElement = document.createElement('video');
 
-        try {
-            if (result = !!videoElement.canPlayType)
+        try
+        {
+            if (videoElement.canPlayType)
             {
                 if (videoElement.canPlayType('video/ogg; codecs="theora"').replace(/^no$/, ''))
                 {
@@ -1103,21 +1132,23 @@ Phaser.Device._initialize = function () {
                     device.hlsVideo = true;
                 }
             }
-        } catch (e) {}
+        }
+        catch (e) {} // eslint-disable-line no-empty
     }
 
     /**
     * Check audio support.
     */
-    function _checkAudio () {
+    function _checkAudio ()
+    {
 
-        device.audioData = !!(window['Audio']);
-        device.webAudio = !!(window['AudioContext'] || window['webkitAudioContext']);
+        device.audioData = !!(window.Audio);
+        device.webAudio = !!(window.AudioContext || window.webkitAudioContext);
         var audioElement = document.createElement('audio');
-        var result = false;
 
-        try {
-            if (result = !!audioElement.canPlayType)
+        try
+        {
+            if (audioElement.canPlayType)
             {
                 if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''))
                 {
@@ -1173,8 +1204,9 @@ Phaser.Device._initialize = function () {
                     }
                 }
             }
-        } catch (e) {
         }
+        catch (e)
+        {} // eslint-disable-line no-empty
 
     }
 
@@ -1183,7 +1215,8 @@ Phaser.Device._initialize = function () {
     *
     * @author Matt DesLauriers (@mattdesl)
     */
-    function _checkIsLittleEndian () {
+    function _checkIsLittleEndian ()
+    {
 
         var a = new ArrayBuffer(4);
         var b = new Uint8Array(a);
@@ -1216,7 +1249,8 @@ Phaser.Device._initialize = function () {
     *
     * @author Matt DesLauriers (@mattdesl)
     */
-    function _checkIsUint8ClampedImageData () {
+    function _checkIsUint8ClampedImageData ()
+    {
 
         if (Uint8ClampedArray === undefined)
         {
@@ -1242,9 +1276,10 @@ Phaser.Device._initialize = function () {
     /**
     * Check PixelRatio, iOS device, Vibration API, ArrayBuffers and endianess.
     */
-    function _checkDevice () {
+    function _checkDevice ()
+    {
 
-        device.pixelRatio = window['devicePixelRatio'] || 1;
+        device.pixelRatio = window.devicePixelRatio || 1;
         device.iPhone = navigator.userAgent.toLowerCase().indexOf('iphone') !== -1;
         device.iPhone4 = (device.pixelRatio === 2 && device.iPhone);
         device.iPad = navigator.userAgent.toLowerCase().indexOf('ipad') !== -1;
@@ -1278,16 +1313,17 @@ Phaser.Device._initialize = function () {
     /**
     * Check whether the host environment support 3D CSS.
     */
-    function _checkCSS3D () {
+    function _checkCSS3D ()
+    {
 
         var el = document.createElement('p');
         var has3d;
         var transforms = {
-            'webkitTransform': '-webkit-transform',
-            'OTransform': '-o-transform',
-            'msTransform': '-ms-transform',
-            'MozTransform': '-moz-transform',
-            'transform': 'transform'
+            webkitTransform: '-webkit-transform',
+            OTransform: '-o-transform',
+            msTransform: '-ms-transform',
+            MozTransform: '-moz-transform',
+            transform: 'transform'
         };
 
         // Add it to the body to get the computed style.
@@ -1297,13 +1333,13 @@ Phaser.Device._initialize = function () {
         {
             if (el.style[t] !== undefined)
             {
-                el.style[t] = "translate3d(1px,1px,1px)";
+                el.style[t] = 'translate3d(1px,1px,1px)';
                 has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
             }
         }
 
         document.body.removeChild(el);
-        device.css3D = (has3d !== undefined && has3d.length > 0 && has3d !== "none");
+        device.css3D = (has3d !== undefined && has3d.length > 0 && has3d !== 'none');
 
     }
 
@@ -1329,7 +1365,8 @@ Phaser.Device._initialize = function () {
 * @param {string} type - One of 'mp3, 'ogg', 'm4a', 'wav', 'webm' or 'opus'.
 * @return {boolean} True if the given file type is supported by the browser, otherwise false.
 */
-Phaser.Device.canPlayAudio = function (type) {
+Phaser.Device.canPlayAudio = function (type)
+{
 
     if (type === 'mp3' && this.mp3)
     {
@@ -1372,7 +1409,8 @@ Phaser.Device.canPlayAudio = function (type) {
 * @param {string} type - One of 'mp4, 'ogg', 'webm' or 'mpeg'.
 * @return {boolean} True if the given file type is supported by the browser, otherwise false.
 */
-Phaser.Device.canPlayVideo = function (type) {
+Phaser.Device.canPlayVideo = function (type)
+{
 
     if (type === 'webm' && (this.webmVideo || this.vp9Video))
     {
@@ -1402,7 +1440,8 @@ Phaser.Device.canPlayVideo = function (type) {
  * @memberof Phaser.Device.prototype
  * @return {boolean}
  */
-Phaser.Device.needsTouchUnlock = function () {
+Phaser.Device.needsTouchUnlock = function ()
+{
     return !!(!this.cocoonJS && (this.iOS || this.android) || (window.PhaserGlobal && window.PhaserGlobal.fakeiOSTouchLock));
 };
 
@@ -1418,7 +1457,8 @@ Phaser.Device.needsTouchUnlock = function () {
 * @method isAndroidStockBrowser
 * @memberof Phaser.Device.prototype
 */
-Phaser.Device.isAndroidStockBrowser = function () {
+Phaser.Device.isAndroidStockBrowser = function ()
+{
 
     var matches = window.navigator.userAgent.match(/Android.*AppleWebKit\/([\d.]+)/);
     return matches && matches[1] < 537;

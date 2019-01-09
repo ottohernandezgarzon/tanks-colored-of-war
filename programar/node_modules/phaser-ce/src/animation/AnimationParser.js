@@ -26,7 +26,8 @@ Phaser.AnimationParser = {
     * @param {number} [skipFrames=0] - Skip a number of frames. Useful when there are multiple sprite sheets in one image.
     * @return {Phaser.FrameData} A FrameData object containing the parsed frames.
     */
-    spriteSheet: function (game, key, frameWidth, frameHeight, frameMax, margin, spacing, skipFrames) {
+    spriteSheet: function (game, key, frameWidth, frameHeight, frameMax, margin, spacing, skipFrames)
+    {
 
         if (frameMax === undefined) { frameMax = -1; }
         if (margin === undefined) { margin = 0; }
@@ -39,53 +40,97 @@ Phaser.AnimationParser = {
         {
             img = game.cache.getImage(key);
         }
+        else
+        {
+            key = img.name;
+        }
 
         if (img === null)
         {
             return null;
         }
 
+        if (frameWidth <= 0 || frameHeight <= 0)
+        {
+            console.warn('Phaser.AnimationParser.spriteSheet: \'%s\' frameWidth (%s) or frameHeight (%s) must be positive',
+                key, frameWidth, frameHeight);
+
+            return null;
+        }
+
         var width = img.width;
         var height = img.height;
 
-        if (frameWidth <= 0)
+        if (width === 0 || height === 0)
         {
-            frameWidth = Math.floor(-width / Math.min(-1, frameWidth));
+            console.warn('Phaser.AnimationParser.spriteSheet: \'%s\' width (%s) or height (%s) is zero', key, width, height);
+
+            return null;
         }
 
-        if (frameHeight <= 0)
+        if (width < frameWidth || height < frameHeight)
         {
-            frameHeight = Math.floor(-height / Math.min(-1, frameHeight));
+            console.warn('Phaser.AnimationParser.spriteSheet: \'%s\' width (%s) or height (%s) is less than the given frameWidth (%s) or frameHeight (%s)',
+                key, width, height, frameWidth, frameHeight);
+
+            return null;
         }
 
         var row = Math.floor((width - margin) / (frameWidth + spacing));
         var column = Math.floor((height - margin) / (frameHeight + spacing));
         var total = row * column;
+        var totalAvailable = total;
+        var lastAvailable = total - 1;
+        var firstFrame = 0;
+        var lastFrame = lastAvailable;
 
         if (skipFrames > total || skipFrames < -total)
         {
-            console.warn(
-                "Phaser.AnimationParser.spriteSheet: skipFrames = " +
-                skipFrames.toString() + " is larger than total sprite number " +
-                total.toString());
+            console.warn('Phaser.AnimationParser.spriteSheet: \'%s\' skipFrames = %s is larger than the frame total %s',
+                key, skipFrames, total);
+
             return null;
         }
 
-        if (skipFrames < 0)
+        if (frameMax > -1)
         {
-            // Allow negative skipframes.
-            skipFrames = total + skipFrames;
+            total = frameMax;
+            lastFrame = total - 1;
         }
 
-        if (frameMax !== -1)
+        if (total === 0)
         {
-            total = skipFrames + frameMax;
+            console.warn('Phaser.AnimationParser.spriteSheet: \'%s\' zero frames were produced', key);
+
+            return null;
         }
 
-        //  Zero or smaller than frame sizes?
-        if (width === 0 || height === 0 || width < frameWidth || height < frameHeight || total === 0)
+        if (skipFrames > 0)
         {
-            console.warn("Phaser.AnimationParser.spriteSheet: '" + key + "'s width/height zero or width/height < given frameWidth/frameHeight");
+            // Offset from start
+            firstFrame = skipFrames;
+            total = Math.min(total, totalAvailable - skipFrames);
+            lastFrame = firstFrame + total - 1;
+        }
+        else if (skipFrames < 0)
+        {
+            // Offset from end
+            lastFrame = lastAvailable + skipFrames;
+            total = Math.min(total, totalAvailable + skipFrames);
+            firstFrame = lastFrame - total + 1;
+        }
+
+        if (firstFrame < 0)
+        {
+            console.warn('First frame index %s is outside of range [0, %d]', firstFrame, lastAvailable);
+
+            return null;
+        }
+
+        if (lastFrame > lastAvailable)
+        {
+            console.warn('Last frame index %s is outside of range [0, %d]', lastFrame, lastAvailable);
+
             return null;
         }
 
@@ -93,10 +138,19 @@ Phaser.AnimationParser = {
         var data = new Phaser.FrameData();
         var x = margin;
         var y = margin;
+        var frameIndex = 0;
 
-        for (var i = 0; i < total; i++)
+        for (var i = 0; i < totalAvailable; i++)
         {
-            data.addFrame(new Phaser.Frame(i, x, y, frameWidth, frameHeight, ''));
+            if (i > lastFrame)
+            {
+                break;
+            }
+
+            if (i >= firstFrame)
+            {
+                data.addFrame(new Phaser.Frame(frameIndex++, x, y, frameWidth, frameHeight, ''));
+            }
 
             x += frameWidth + spacing;
 
@@ -119,12 +173,13 @@ Phaser.AnimationParser = {
     * @param {object} json - The JSON data from the Texture Atlas. Must be in Array format.
     * @return {Phaser.FrameData} A FrameData object containing the parsed frames.
     */
-    JSONData: function (game, json) {
+    JSONData: function (game, json)
+    {
 
         //  Malformed?
-        if (!json['frames'])
+        if (!json.frames)
         {
-            console.warn("Phaser.AnimationParser.JSONData: Invalid Texture Atlas JSON given, missing 'frames' array");
+            console.warn('Phaser.AnimationParser.JSONData: Invalid Texture Atlas JSON given, missing \'frames\' array');
             console.log(json);
             return;
         }
@@ -133,7 +188,7 @@ Phaser.AnimationParser = {
         var data = new Phaser.FrameData();
 
         //  By this stage frames is a fully parsed array
-        var frames = json['frames'];
+        var frames = json.frames;
         var newFrame;
 
         for (var i = 0; i < frames.length; i++)
@@ -178,12 +233,14 @@ Phaser.AnimationParser = {
     * @param {object} json - The JSON data from the Texture Atlas. Must be in Pyxel JSON format.
     * @return {Phaser.FrameData} A FrameData object containing the parsed frames.
     */
-    JSONDataPyxel: function (game, json) {
+    JSONDataPyxel: function (game, json)
+    {
 
         //  Malformed? There are a few keys to check here.
-        var signature = ['layers', 'tilewidth','tileheight','tileswide', 'tileshigh'];
+        var signature = [ 'layers', 'tilewidth','tileheight','tileswide', 'tileshigh' ];
 
-        signature.forEach( function(key) {
+        signature.forEach(function (key)
+        {
             if (!json[key])
             {
                 console.warn('Phaser.AnimationParser.JSONDataPyxel: Invalid Pyxel Tilemap JSON given, missing "' + key + '" key.');
@@ -193,7 +250,7 @@ Phaser.AnimationParser = {
         });
 
         // For this purpose, I only care about parsing tilemaps with a single layer.
-        if (json['layers'].length !== 1)
+        if (json.layers.length !== 1)
         {
             console.warn('Phaser.AnimationParser.JSONDataPyxel: Too many layers, this parser only supports flat Tilemaps.');
             console.log(json);
@@ -202,10 +259,10 @@ Phaser.AnimationParser = {
 
         var data = new Phaser.FrameData();
 
-        var tileheight = json['tileheight'];
-        var tilewidth = json['tilewidth'];
+        var tileheight = json.tileheight;
+        var tilewidth = json.tilewidth;
 
-        var frames = json['layers'][0]['tiles'];
+        var frames = json.layers[0].tiles;
         var newFrame;
 
         for (var i = 0; i < frames.length; i++)
@@ -216,7 +273,7 @@ Phaser.AnimationParser = {
                 frames[i].y,
                 tilewidth,
                 tileheight,
-                "frame_" + i  // No names are included in pyxel tilemap data.
+                'frame_' + i // No names are included in pyxel tilemap data.
             ));
 
             // No trim data is included.
@@ -235,12 +292,13 @@ Phaser.AnimationParser = {
     * @param {object} json - The JSON data from the Texture Atlas. Must be in JSON Hash format.
     * @return {Phaser.FrameData} A FrameData object containing the parsed frames.
     */
-    JSONDataHash: function (game, json) {
+    JSONDataHash: function (game, json)
+    {
 
         //  Malformed?
-        if (!json['frames'])
+        if (!json.frames)
         {
-            console.warn("Phaser.AnimationParser.JSONDataHash: Invalid Texture Atlas JSON given, missing 'frames' object");
+            console.warn('Phaser.AnimationParser.JSONDataHash: Invalid Texture Atlas JSON given, missing \'frames\' object');
             console.log(json);
             return;
         }
@@ -249,7 +307,7 @@ Phaser.AnimationParser = {
         var data = new Phaser.FrameData();
 
         //  By this stage frames is a fully parsed array
-        var frames = json['frames'];
+        var frames = json.frames;
         var newFrame;
         var i = 0;
 
@@ -297,12 +355,13 @@ Phaser.AnimationParser = {
     * @param {object} xml - The XML data from the Texture Atlas. Must be in Starling XML format.
     * @return {Phaser.FrameData} A FrameData object containing the parsed frames.
     */
-    XMLData: function (game, xml) {
+    XMLData: function (game, xml)
+    {
 
         //  Malformed?
         if (!xml.getElementsByTagName('TextureAtlas'))
         {
-            console.warn("Phaser.AnimationParser.XMLData: Invalid Texture Atlas XML given, missing <TextureAtlas> tag");
+            console.warn('Phaser.AnimationParser.XMLData: Invalid Texture Atlas XML given, missing <TextureAtlas> tag');
             return;
         }
 

@@ -70,7 +70,8 @@
 * @param {boolean} [antialias=true] - Draw all image textures anti-aliased or not. The default is for smooth textures, but disable if your game features pixel art.
 * @param {object} [physicsConfig=null] - A physics configuration object to pass to the Physics world on creation.
 */
-Phaser.Game = function (width, height, renderer, parent, state, transparent, antialias, physicsConfig) {
+Phaser.Game = function (width, height, renderer, parent, state, transparent, antialias, physicsConfig)
+{
 
     /**
     * @property {number} id - Phaser Game ID
@@ -188,7 +189,7 @@ Phaser.Game = function (width, height, renderer, parent, state, transparent, ant
     this.renderer = null;
 
     /**
-    * @property {number} renderType - The Renderer this game will use. Either Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL, Phaser.WEBGL_MULTI or Phaser.HEADLESS. After the game boots, renderType reflects the renderer in use: AUTO changes to CANVAS or WEBGL and WEBGL_MULTI changes to WEBGL. HEADLESS skips `render` hooks but not `preRender` or `postRender`; set {@link lockRender} to skip those as well.
+    * @property {number} renderType - The Renderer this game will use. Either Phaser.AUTO, Phaser.CANVAS, Phaser.WEBGL, Phaser.WEBGL_MULTI or Phaser.HEADLESS. After the game boots, renderType reflects the renderer in use: AUTO changes to CANVAS or WEBGL and WEBGL_MULTI changes to WEBGL. HEADLESS skips `preRender`, `render, and `postRender` hooks, just like {@link #lockRender}.
     * @readonly
     */
     this.renderType = Phaser.AUTO;
@@ -513,7 +514,7 @@ Phaser.Game = function (width, height, renderer, parent, state, transparent, ant
             this.antialias = antialias;
         }
 
-        this.rnd = new Phaser.RandomDataGenerator([(Date.now() * Math.random()).toString()]);
+        this.rnd = new Phaser.RandomDataGenerator([ (Date.now() * Math.random()).toString() ]);
 
         this.state = new Phaser.StateManager(this, state);
     }
@@ -545,9 +546,15 @@ Phaser.Game = function (width, height, renderer, parent, state, transparent, ant
 * @property {number}             [GameConfig.fullScreenScaleMode]           - The scaling method used by the ScaleManager when in fullscreen.
 * @property {HTMLElement}        [GameConfig.fullScreenTarget]              - The DOM element on which the Fullscreen API enter request will be invoked.
 * @property {number|string}      [GameConfig.height=600]
+* @property {boolean}            [GameConfig.keyboard=true]                 - Starts the keyboard input handler.
+* @property {number}             [GameConfig.maxPointers=-1]                - Sets {@link Phaser.Input#maxPointers}.
+* @property {boolean}            [GameConfig.mouse=true]                    - Starts the mouse input handler, if the mspointer and touch handlers were not started.
+* @property {boolean}            [GameConfig.mouseWheel=true]               - Starts the {@link Phaser.MouseWheel mouse wheel} handler, if supported by the device.
+* @property {boolean}            [GameConfig.mspointer=true]                - Starts the {@link Phaser.MSPointer Pointer Events} handler (mspointer), if supported by the device.
 * @property {boolean}            [GameConfig.multiTexture=false]            - Enable support for multiple bound Textures in WebGL. Same as `{renderer: Phaser.WEBGL_MULTI}`.
 * @property {string|HTMLElement} [GameConfig.parent='']                     - The DOM element into which this games canvas will be injected.
 * @property {object}             [GameConfig.physicsConfig]
+* @property {boolean}            [GameConfig.pointerLock=true]              - Starts the {@link Phaser.PointerLock Pointer Lock} handler, if supported by the device.
 * @property {boolean}            [GameConfig.preserveDrawingBuffer=false]   - Whether or not the contents of the stencil buffer is retained after rendering.
 * @property {number}             [GameConfig.renderer=Phaser.AUTO]
 * @property {number}             [GameConfig.resolution=1]                  - The resolution of your game, as a ratio of canvas pixels to game pixels.
@@ -557,7 +564,8 @@ Phaser.Game = function (width, height, renderer, parent, state, transparent, ant
 * @property {number}             [GameConfig.scaleV=1]                      - Vertical scaling factor for USER_SCALE scale mode.
 * @property {number}             [GameConfig.seed]                          - Seed for {@link Phaser.RandomDataGenerator}.
 * @property {object}             [GameConfig.state]
-* @property {boolean}            [GameConfig.transparent=false]
+* @property {boolean}            [GameConfig.touch=true]                    - Starts the {@link Phaser.Touch touch} handler, if supported by the device and the Pointer Events handler (mspointer) was not started.
+* @property {boolean|string}     [GameConfig.transparent=false]             - Sets {@link Phaser.Game#transparent}. `'notMultiplied'` disables the WebGL context attribute `premultipliedAlpha`.
 * @property {number}             [GameConfig.trimH=0]                       - Horizontal trim for USER_SCALE scale mode.
 * @property {number}             [GameConfig.trimV=0]                       - Vertical trim for USER_SCALE scale mode.
 * @property {number|string}      [GameConfig.width=800]
@@ -572,84 +580,85 @@ Phaser.Game.prototype = {
     * @method Phaser.Game#parseConfig
     * @protected
     */
-    parseConfig: function (config) {
+    parseConfig: function (config)
+    {
 
         this.config = config;
 
-        if (config['enableDebug'] === undefined)
+        if (config.enableDebug === undefined)
         {
             this.config.enableDebug = true;
         }
 
-        if (config['width'])
+        if (config.width)
         {
-            this._width = config['width'];
+            this._width = config.width;
         }
 
-        if (config['height'])
+        if (config.height)
         {
-            this._height = config['height'];
+            this._height = config.height;
         }
 
-        if (config['renderer'])
+        if (config.renderer)
         {
-            this.renderType = config['renderer'];
+            this.renderType = config.renderer;
         }
 
-        if (config['parent'])
+        if (config.parent)
         {
-            this.parent = config['parent'];
+            this.parent = config.parent;
         }
 
-        if (config['transparent'] !== undefined)
+        if (config.transparent !== undefined)
         {
-            this.transparent = config['transparent'];
+            this.transparent = config.transparent;
         }
 
-        if (config['antialias'] !== undefined)
+        if (config.antialias !== undefined)
         {
-            this.antialias = config['antialias'];
+            this.antialias = config.antialias;
         }
 
-        if (config['clearBeforeRender'] !== undefined)
+        if (config.clearBeforeRender !== undefined)
         {
-            this.clearBeforeRender = config['clearBeforeRender'];
+            this.clearBeforeRender = config.clearBeforeRender;
         }
 
-        if (config['multiTexture'] !== undefined)
+        if (config.multiTexture !== undefined)
         {
-            this.multiTexture = config['multiTexture'];
+            this.multiTexture = config.multiTexture;
         }
 
-        if (config['resolution'])
+        if (config.resolution)
         {
-            this.resolution = config['resolution'];
+            this.resolution = config.resolution;
         }
 
-        if (config['preserveDrawingBuffer'] !== undefined)
+        if (config.preserveDrawingBuffer !== undefined)
         {
-            this.preserveDrawingBuffer = config['preserveDrawingBuffer'];
+            this.preserveDrawingBuffer = config.preserveDrawingBuffer;
         }
 
-        if (config['physicsConfig'])
+        if (config.physicsConfig)
         {
-            this.physicsConfig = config['physicsConfig'];
+            this.physicsConfig = config.physicsConfig;
         }
 
-        var seed = [(Date.now() * Math.random()).toString()];
+        var seed = [ (Date.now() * Math.random()).toString() ];
 
-        if (config['seed'])
+        if (config.seed)
         {
-            seed = config['seed'];
+            seed = config.seed;
         }
 
         this.rnd = new Phaser.RandomDataGenerator(seed);
 
         var state = null;
 
-        if (config['state'])
+        if (config.state)
         {
-            state = config['state'];
+            state = config.state;
         }
 
         this.state = new Phaser.StateManager(this, state);
@@ -662,7 +671,8 @@ Phaser.Game.prototype = {
     * @method Phaser.Game#boot
     * @protected
     */
-    boot: function () {
+    boot: function ()
+    {
 
         if (this.isBooted)
         {
@@ -704,11 +714,11 @@ Phaser.Game.prototype = {
         this.stage.boot();
         this.world.boot();
         this.scale.boot();
-        this.input.boot();
+        this.input.boot(this.config);
         this.sound.boot();
         this.state.boot();
 
-        if (this.config['enableDebug'])
+        if (this.config.enableDebug)
         {
             this.debug = new Phaser.Utils.Debug(this);
             this.debug.boot();
@@ -722,9 +732,9 @@ Phaser.Game.prototype = {
 
         this.isRunning = true;
 
-        if (this.config && this.config['forceSetTimeOut'])
+        if (this.config && this.config.forceSetTimeOut)
         {
-            this.raf = new Phaser.RequestAnimationFrame(this, this.config['forceSetTimeOut']);
+            this.raf = new Phaser.RequestAnimationFrame(this, this.config.forceSetTimeOut);
         }
         else
         {
@@ -733,15 +743,9 @@ Phaser.Game.prototype = {
 
         this._kickstart = true;
 
-        if (window['focus'])
-        {
-            if (!window['PhaserGlobal'] || (window['PhaserGlobal'] && !window['PhaserGlobal'].stopFocus))
-            {
-                window.focus();
-            }
-        }
+        this.focusWindow();
 
-        if (this.config['disableStart'])
+        if (this.config.disableStart)
         {
             return;
         }
@@ -752,7 +756,8 @@ Phaser.Game.prototype = {
         }
         else
         {
-            this.cache.onReady.addOnce(function () {
+            this.cache.onReady.addOnce(function ()
+            {
                 this.raf.start();
             }, this);
         }
@@ -765,9 +770,10 @@ Phaser.Game.prototype = {
     * @method Phaser.Game#showDebugHeader
     * @protected
     */
-    showDebugHeader: function () {
+    showDebugHeader: function ()
+    {
 
-        if (window['PhaserGlobal'] && window['PhaserGlobal'].hideBanner)
+        if (window.PhaserGlobal && window.PhaserGlobal.hideBanner)
         {
             return;
         }
@@ -819,7 +825,7 @@ Phaser.Game.prototype = {
 
             console.log.apply(console, args);
         }
-        else if (window['console'])
+        else if (window.console)
         {
             console.log('Phaser v' + v + ' | Pixi.js | ' + r + ' | ' + a + ' | http://phaser.io');
         }
@@ -832,7 +838,8 @@ Phaser.Game.prototype = {
     * @method Phaser.Game#setUpRenderer
     * @protected
     */
-    setUpRenderer: function () {
+    setUpRenderer: function ()
+    {
 
         if (!this.device.canvas)
         {
@@ -840,25 +847,25 @@ Phaser.Game.prototype = {
             throw new Error('Phaser.Game - Cannot create Canvas 2d context, aborting.');
         }
 
-        if (this.config['canvas'])
+        if (this.config.canvas)
         {
-            this.canvas = this.config['canvas'];
+            this.canvas = this.config.canvas;
         }
         else
         {
-            this.canvas = Phaser.Canvas.create(this, this.width, this.height, this.config['canvasID'], true);
+            this.canvas = Phaser.Canvas.create(this, this.width, this.height, this.config.canvasID, true);
         }
 
-        if (this.config['canvasStyle'])
+        if (this.config.canvasStyle)
         {
-            this.canvas.style = this.config['canvasStyle'];
+            this.canvas.style = this.config.canvasStyle;
         }
         else
         {
             this.canvas.style['-webkit-full-screen'] = 'width: 100%; height: 100%';
         }
 
-        if (this.config['crisp'])
+        if (this.config.crisp)
         {
             Phaser.Canvas.setImageRenderingCrisp(this.canvas);
         }
@@ -928,7 +935,8 @@ Phaser.Game.prototype = {
     * @private
     * @param {Event} event - The webglcontextlost event.
     */
-    contextLost: function (event) {
+    contextLost: function (event)
+    {
 
         event.preventDefault();
 
@@ -942,7 +950,8 @@ Phaser.Game.prototype = {
     * @method Phaser.Game#contextRestored
     * @private
     */
-    contextRestored: function () {
+    contextRestored: function ()
+    {
 
         this.renderer.initContext();
 
@@ -959,11 +968,13 @@ Phaser.Game.prototype = {
     * @protected
     * @param {number} time - The current time as provided by RequestAnimationFrame.
     */
-    update: function (time) {
+    update: function (time)
+    {
 
         if (this.pendingDestroy)
         {
             this.destroy();
+
             return;
         }
 
@@ -1083,7 +1094,8 @@ Phaser.Game.prototype = {
     * @protected
     * @param {number} timeStep - The current timeStep value as determined by Game.update.
     */
-    updateLogic: function (timeStep) {
+    updateLogic: function (timeStep)
+    {
 
         if (!this._paused && !this.pendingStep)
         {
@@ -1111,6 +1123,7 @@ Phaser.Game.prototype = {
             this.plugins.update();
 
             this.stage.postUpdate();
+            this.state.postUpdate();
             this.plugins.postUpdate();
         }
         else
@@ -1141,9 +1154,10 @@ Phaser.Game.prototype = {
     * @protected
     * @param {number} elapsedTime - The time elapsed since the last update.
     */
-    updateRender: function (elapsedTime) {
+    updateRender: function (elapsedTime)
+    {
 
-        if (this.lockRender)
+        if (this.lockRender || this.renderType === Phaser.HEADLESS)
         {
             return;
         }
@@ -1152,14 +1166,11 @@ Phaser.Game.prototype = {
 
         this.state.preRender(elapsedTime);
 
-        if (this.renderType !== Phaser.HEADLESS)
-        {
-            this.renderer.render(this.stage);
+        this.renderer.render(this.stage);
 
-            this.plugins.render(elapsedTime);
+        this.plugins.render(elapsedTime);
 
-            this.state.render(elapsedTime);
-        }
+        this.state.render(elapsedTime);
 
         this.plugins.postRender(elapsedTime);
 
@@ -1171,7 +1182,8 @@ Phaser.Game.prototype = {
     *
     * @method Phaser.Game#enableStep
     */
-    enableStep: function () {
+    enableStep: function ()
+    {
 
         this.stepping = true;
         this.pendingStep = false;
@@ -1184,7 +1196,8 @@ Phaser.Game.prototype = {
     *
     * @method Phaser.Game#disableStep
     */
-    disableStep: function () {
+    disableStep: function ()
+    {
 
         this.stepping = false;
         this.pendingStep = false;
@@ -1197,7 +1210,8 @@ Phaser.Game.prototype = {
     *
     * @method Phaser.Game#step
     */
-    step: function () {
+    step: function ()
+    {
 
         this.pendingStep = false;
         this.stepCount++;
@@ -1216,7 +1230,8 @@ Phaser.Game.prototype = {
     *
     * @method Phaser.Game#destroy
     */
-    destroy: function () {
+    destroy: function ()
+    {
 
         this.raf.stop();
 
@@ -1266,7 +1281,8 @@ Phaser.Game.prototype = {
     * @param {object} event - The DOM event that caused the game to pause, if any.
     * @protected
     */
-    gamePaused: function (event) {
+    gamePaused: function (event)
+    {
 
         //   If the game is already paused it was done via game code, so don't re-pause it
         if (!this._paused)
@@ -1298,7 +1314,8 @@ Phaser.Game.prototype = {
     * @param {object} event - The DOM event that caused the game to pause, if any.
     * @protected
     */
-    gameResumed: function (event) {
+    gameResumed: function (event)
+    {
 
         //  Game is paused, but wasn't paused via code, so resume it
         if (this._paused && !this._codePaused)
@@ -1332,7 +1349,8 @@ Phaser.Game.prototype = {
     * @param {object} event - The DOM event that caused the game to pause, if any.
     * @protected
     */
-    focusLoss: function (event) {
+    focusLoss: function (event)
+    {
 
         this.onBlur.dispatch(event);
 
@@ -1350,13 +1368,34 @@ Phaser.Game.prototype = {
     * @param {object} event - The DOM event that caused the game to pause, if any.
     * @protected
     */
-    focusGain: function (event) {
+    focusGain: function (event)
+    {
+
+        this.focusWindow();
 
         this.onFocus.dispatch(event);
 
         if (!this.stage.disableVisibilityChange)
         {
             this.gameResumed(event);
+        }
+
+    },
+
+    /**
+    * Try to focus the browsing context, unless prohibited by PhaserGlobal.stopFocus.
+    *
+    * @private
+    */
+    focusWindow: function ()
+    {
+
+        if (window.focus)
+        {
+            if (!window.PhaserGlobal || (window.PhaserGlobal && !window.PhaserGlobal.stopFocus))
+            {
+                window.focus();
+            }
         }
 
     }
@@ -1371,13 +1410,15 @@ Phaser.Game.prototype.constructor = Phaser.Game;
 * @name Phaser.Game#paused
 * @property {boolean} paused - Gets and sets the paused state of the Game.
 */
-Object.defineProperty(Phaser.Game.prototype, "paused", {
+Object.defineProperty(Phaser.Game.prototype, 'paused', {
 
-    get: function () {
+    get: function ()
+    {
         return this._paused;
     },
 
-    set: function (value) {
+    set: function (value)
+    {
 
         if (value === true)
         {

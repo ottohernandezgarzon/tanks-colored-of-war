@@ -14,7 +14,8 @@
 * @param {number} [volume=1] - Default value for the volume, between 0 and 1.
 * @param {boolean} [loop=false] - Whether or not the sound will loop.
 */
-Phaser.Sound = function (game, key, volume, loop, connect) {
+Phaser.Sound = function (game, key, volume, loop, connect)
+{
 
     if (volume === undefined) { volume = 1; }
     if (loop === undefined) { loop = false; }
@@ -181,11 +182,11 @@ Phaser.Sound = function (game, key, volume, loop, connect) {
     */
     this._sound = null;
 
-	/**
+    /**
     * @property {object} _globalVolume - Internal var for keeping track of global volume when using AudioTag
     * @private
     */
-	this._globalVolume = 1;
+    this._globalVolume = 1;
 
     /**
     * @property {boolean} _markedToDelete - When audio stops, disconnect Web Audio nodes.
@@ -199,7 +200,7 @@ Phaser.Sound = function (game, key, volume, loop, connect) {
     */
     this._removeFromSoundManager = false;
 
-
+    this._sourceId = 0;
 
     if (this.usingWebAudio)
     {
@@ -361,7 +362,8 @@ Phaser.Sound.prototype = {
     * @param {string} key - The Phaser.Cache key of the sound file to check for decoding.
     * @protected
     */
-    soundHasUnlocked: function (key) {
+    soundHasUnlocked: function (key)
+    {
 
         if (key === this.key)
         {
@@ -382,7 +384,8 @@ Phaser.Sound.prototype = {
     * @param {number} [volume=1] - The volume the sound will play back at, between 0 (silent) and 1 (full volume).
     * @param {boolean} [loop=false] - Sets if the sound will loop or not.
     */
-    addMarker: function (name, start, duration, volume, loop) {
+    addMarker: function (name, start, duration, volume, loop)
+    {
 
         if (duration === undefined || duration === null) { duration = 1; }
         if (volume === undefined || volume === null) { volume = 1; }
@@ -405,7 +408,8 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#removeMarker
     * @param {string} name - The key of the marker to remove.
     */
-    removeMarker: function (name) {
+    removeMarker: function (name)
+    {
 
         delete this.markers[name];
 
@@ -418,9 +422,9 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#onEndedHandler
     * @protected
     */
-    onEndedHandler: function () {
-
-        this._sound.onended = null;
+    onEndedHandler: function ()
+    {
+        this._removeOnEndedHandler();
         this.isPlaying = false;
         this.currentTime = this.durationMS;
         this.stop();
@@ -433,14 +437,7 @@ Phaser.Sound.prototype = {
 
         if (this._markedToDelete)
         {
-            if (this.externalNode)
-            {
-                this._sound.disconnect(this.externalNode);
-            }
-            else if (this.gainNode)
-            {
-                this._sound.disconnect(this.gainNode);
-            }
+            this._disconnectSource();
 
             if (this._removeFromSoundManager)
             {
@@ -470,7 +467,8 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#update
     * @protected
     */
-    update: function () {
+    update: function ()
+    {
 
         if (!this.game.cache.checkSoundKey(this.key))
         {
@@ -527,27 +525,24 @@ Phaser.Sound.prototype = {
                         }
                     }
                 }
+                else if (this.loop)
+                {
+                    this.onLoop.dispatch(this);
+
+                    if (this.currentMarker === '')
+                    {
+                        this.currentTime = 0;
+                        this.startTime = this.game.time.time;
+                    }
+
+                    //  Gets reset by the play function
+                    this.isPlaying = false;
+
+                    this.play(this.currentMarker, 0, this.volume, true, true);
+                }
                 else
                 {
-                    if (this.loop)
-                    {
-                        this.onLoop.dispatch(this);
-
-                        if (this.currentMarker === '')
-                        {
-                            this.currentTime = 0;
-                            this.startTime = this.game.time.time;
-                        }
-
-                        //  Gets reset by the play function
-                        this.isPlaying = false;
-
-                        this.play(this.currentMarker, 0, this.volume, true, true);
-                    }
-                    else
-                    {
-                        this.stop();
-                    }
+                    this.stop();
                 }
             }
         }
@@ -560,7 +555,8 @@ Phaser.Sound.prototype = {
      * @param {number} [volume=1] - Volume of the sound you want to play. If none is given it will use the volume given to the Sound when it was created (which defaults to 1 if none was specified).
      * @return {Phaser.Sound} This sound instance.
      */
-    loopFull: function (volume) {
+    loopFull: function (volume)
+    {
 
         return this.play(null, 0, volume, true);
 
@@ -577,7 +573,8 @@ Phaser.Sound.prototype = {
     * @param {boolean} [forceRestart=true] - If the sound is already playing you can set forceRestart to restart it from the beginning.
     * @return {Phaser.Sound} This sound instance.
     */
-    play: function (marker, position, volume, loop, forceRestart) {
+    play: function (marker, position, volume, loop, forceRestart)
+    {
 
         if (marker === undefined || marker === false || marker === null) { marker = ''; }
         if (forceRestart === undefined) { forceRestart = true; }
@@ -592,27 +589,7 @@ Phaser.Sound.prototype = {
         {
             if (this.usingWebAudio)
             {
-                if (this._sound.stop === undefined)
-                {
-                    this._sound.noteOff(0);
-                }
-                else
-                {
-                    try {
-                        this._sound.stop(0);
-                    }
-                    catch (e) {
-                    }
-                }
-
-                if (this.externalNode)
-                {
-                    this._sound.disconnect(this.externalNode);
-                }
-                else if (this.gainNode)
-                {
-                    this._sound.disconnect(this.gainNode);
-                }
+                this._stopSourceAndDisconnect();
             }
             else if (this.usingAudioTag)
             {
@@ -660,7 +637,7 @@ Phaser.Sound.prototype = {
             }
             else
             {
-                console.warn("Phaser.Sound.play: audio marker " + marker + " doesn't exist");
+                console.warn('Phaser.Sound.play: audio marker ' + marker + ' doesn\'t exist');
                 return this;
             }
         }
@@ -688,19 +665,7 @@ Phaser.Sound.prototype = {
             //  Does the sound need decoding?
             if (this.game.cache.isSoundDecoded(this.key))
             {
-                this._sound = this.context.createBufferSource();
-
-                if (this.externalNode)
-                {
-                    this._sound.connect(this.externalNode);
-                }
-                else
-                {
-                    this._sound.connect(this.gainNode);
-                }
-
-                this._buffer = this.game.cache.getSoundData(this.key);
-                this._sound.buffer = this._buffer;
+                this._createSourceAndConnect();
 
                 if (this.loop && marker === '')
                 {
@@ -709,7 +674,7 @@ Phaser.Sound.prototype = {
 
                 if (!this.loop && marker === '')
                 {
-                    this._sound.onended = this.onEndedHandler.bind(this);
+                    this._addOnEndedHandler();
                 }
 
                 this.totalDuration = this._sound.buffer.duration;
@@ -720,24 +685,17 @@ Phaser.Sound.prototype = {
                     this.durationMS = Math.ceil(this.totalDuration * 1000);
                 }
 
-                //  Useful to cache this somewhere perhaps?
-                if (this._sound.start === undefined)
+                if (this.loop && marker === '')
                 {
-                    this._sound.noteGrainOn(0, this.position, this.duration);
+                    this._startSource(0, 0);
                 }
                 else
                 {
-                    if (this.loop && marker === '')
-                    {
-                        this._sound.start(0, 0);
-                    }
-                    else
-                    {
-                        this._sound.start(0, this.position, this.duration);
-                    }
+                    this._startSource(0, this.position, this.duration);
                 }
 
                 this.isPlaying = true;
+                this.paused = false;
                 this.startTime = this.game.time.time;
                 this.currentTime = 0;
                 this.stopTime = this.startTime + this.durationMS;
@@ -753,54 +711,49 @@ Phaser.Sound.prototype = {
                 }
             }
         }
-        else
+        else if (this.game.cache.getSound(this.key) && this.game.cache.getSound(this.key).locked)
         {
-            if (this.game.cache.getSound(this.key) && this.game.cache.getSound(this.key).locked)
+            this.game.cache.reloadSound(this.key);
+            this.pendingPlayback = true;
+        }
+        else if (this._sound && (this.game.device.cocoonJS || this._sound.readyState === 4))
+        {
+            this._sound.play();
+
+            this._sound.loop = this.loop;
+
+            //  This doesn't become available until you call play(), wonderful ...
+            this.totalDuration = this._sound.duration;
+
+            if (this.duration === 0)
             {
-                this.game.cache.reloadSound(this.key);
-                this.pendingPlayback = true;
+                this.duration = this.totalDuration;
+                this.durationMS = this.totalDuration * 1000;
+            }
+
+            this._sound.currentTime = this.position;
+            this._sound.muted = this._muted;
+
+            if (this._muted || this.game.sound.mute)
+            {
+                this._sound.volume = 0;
             }
             else
             {
-                if (this._sound && (this.game.device.cocoonJS || this._sound.readyState === 4))
-                {
-                    this._sound.play();
-										
-                    this._sound.loop = this.loop;
-										
-                    //  This doesn't become available until you call play(), wonderful ...
-                    this.totalDuration = this._sound.duration;
-
-                    if (this.duration === 0)
-                    {
-                        this.duration = this.totalDuration;
-                        this.durationMS = this.totalDuration * 1000;
-                    }
-
-                    this._sound.currentTime = this.position;
-                    this._sound.muted = this._muted;
-
-                    if (this._muted || this.game.sound.mute)
-                    {
-                        this._sound.volume = 0;
-                    }
-                    else
-                    {
-                        this._sound.volume = this._volume;
-                    }
-
-                    this.isPlaying = true;
-                    this.startTime = this.game.time.time;
-                    this.currentTime = 0;
-                    this.stopTime = this.startTime + this.durationMS;
-
-                    this.onPlay.dispatch(this);
-                }
-                else
-                {
-                    this.pendingPlayback = true;
-                }
+                this._sound.volume = this._volume;
             }
+
+            this.isPlaying = true;
+            this.paused = false;
+            this.startTime = this.game.time.time;
+            this.currentTime = 0;
+            this.stopTime = this.startTime + this.durationMS;
+
+            this.onPlay.dispatch(this);
+        }
+        else
+        {
+            this.pendingPlayback = true;
         }
 
         if (this.playOnce)
@@ -827,7 +780,8 @@ Phaser.Sound.prototype = {
     * @param {number} [volume=1] - Volume of the sound you want to play.
     * @param {boolean} [loop=false] - Loop when it finished playing?
     */
-    restart: function (marker, position, volume, loop) {
+    restart: function (marker, position, volume, loop)
+    {
 
         marker = marker || '';
         position = position || 0;
@@ -843,9 +797,10 @@ Phaser.Sound.prototype = {
     *
     * @method Phaser.Sound#pause
     */
-    pause: function () {
+    pause: function ()
+    {
 
-        if (this.isPlaying && this._sound)
+        if (this.isPlaying)
         {
             this.paused = true;
             this.pausedPosition = this.currentTime;
@@ -862,25 +817,16 @@ Phaser.Sound.prototype = {
     *
     * @method Phaser.Sound#resume
     */
-    resume: function () {
+    resume: function ()
+    {
 
-        if (this.paused && this._sound)
+        if (this.paused)
         {
             if (this.usingWebAudio)
             {
                 var p = Math.max(0, this.position + (this.pausedPosition / 1000));
 
-                this._sound = this.context.createBufferSource();
-                this._sound.buffer = this._buffer;
-
-                if (this.externalNode)
-                {
-                    this._sound.connect(this.externalNode);
-                }
-                else
-                {
-                    this._sound.connect(this.gainNode);
-                }
+                this._createSourceAndConnect();
 
                 if (this.currentMarker === '')
                 {
@@ -890,42 +836,19 @@ Phaser.Sound.prototype = {
                     }
                     else
                     {
-                        this._sound.onended = this.onEndedHandler.bind(this);
+                        this._addOnEndedHandler();
                     }
                 }
 
                 var duration = this.duration - (this.pausedPosition / 1000);
 
-                if (this._sound.start === undefined)
+                if (this.loop && this.currentMarker === '')
                 {
-                    this._sound.noteGrainOn(0, p, duration);
-                    //this._sound.noteOn(0); // the zero is vitally important, crashes iOS6 without it
+                    this._startSource(0, p);
                 }
                 else
                 {
-                    if (this.loop && this.game.device.chrome)
-                    {
-                        //  Handle chrome bug: https://code.google.com/p/chromium/issues/detail?id=457099
-                        if (this.game.device.chromeVersion === 42)
-                        {
-                            this._sound.start(0);
-                        }
-                        else
-                        {
-                            if (this.currentMarker === '')
-                            {
-                                this._sound.start(0, p);
-                            }
-                            else
-                            {
-                                this._sound.start(0, p, duration);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        this._sound.start(0, p, duration);
-                    }
+                    this._startSource(0, p, duration);
                 }
             }
             else
@@ -947,35 +870,14 @@ Phaser.Sound.prototype = {
     *
     * @method Phaser.Sound#stop
     */
-    stop: function () {
+    stop: function ()
+    {
 
         if (this.isPlaying && this._sound)
         {
             if (this.usingWebAudio)
             {
-                if (this._sound.stop === undefined)
-                {
-                    this._sound.noteOff(0);
-                }
-                else
-                {
-                    try {
-                        this._sound.stop(0);
-                    }
-                    catch (e)
-                    {
-                        //  Thanks Android 4.4
-                    }
-                }
-
-                if (this.externalNode)
-                {
-                    this._sound.disconnect(this.externalNode);
-                }
-                else if (this.gainNode)
-                {
-                    this._sound.disconnect(this.gainNode);
-                }
+                this._stopSourceAndDisconnect();
 
             }
             else if (this.usingAudioTag)
@@ -1021,7 +923,8 @@ Phaser.Sound.prototype = {
     * @param {boolean} [loop=false] - Should the Sound be set to loop? Note that this doesn't cause the fade to repeat.
     * @param {string} [marker=(current marker)] - The marker to start at; defaults to the current (last played) marker. To start playing from the beginning specify specify a marker of `''`.
     */
-    fadeIn: function (duration, loop, marker) {
+    fadeIn: function (duration, loop, marker)
+    {
 
         if (loop === undefined) { loop = false; }
         if (marker === undefined) { marker = this.currentMarker; }
@@ -1045,7 +948,8 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#fadeOut
     * @param {number} [duration=1000] - The time in milliseconds over which the Sound should fade out.
     */
-    fadeOut: function (duration) {
+    fadeOut: function (duration)
+    {
 
         this.fadeTo(duration, 0);
 
@@ -1060,7 +964,8 @@ Phaser.Sound.prototype = {
     * @param {number} [duration=1000] - The time in milliseconds during which the Sound should fade out.
     * @param {number} [volume] - The volume which the Sound should fade to. This is a value between 0 and 1.
     */
-    fadeTo: function (duration, volume) {
+    fadeTo: function (duration, volume)
+    {
 
         if (!this.isPlaying || this.paused || volume === this.volume)
         {
@@ -1071,11 +976,11 @@ Phaser.Sound.prototype = {
 
         if (volume === undefined)
         {
-            console.warn("Phaser.Sound.fadeTo: No Volume Specified.");
+            console.warn('Phaser.Sound.fadeTo: No Volume Specified.');
             return;
         }
 
-        this.fadeTween = this.game.add.tween(this).to( { volume: volume }, duration, Phaser.Easing.Linear.None, true);
+        this.fadeTween = this.game.add.tween(this).to({ volume: volume }, duration, Phaser.Easing.Linear.None, true);
 
         this.fadeTween.onComplete.add(this.fadeComplete, this);
 
@@ -1087,7 +992,8 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#fadeComplete
     * @private
     */
-    fadeComplete: function () {
+    fadeComplete: function ()
+    {
 
         this.onFadeComplete.dispatch(this, this.volume);
 
@@ -1109,7 +1015,8 @@ Phaser.Sound.prototype = {
     * @protected
     * @param {float} globalVolume - The global SoundManager volume.
     */
-    updateGlobalVolume: function (globalVolume) {
+    updateGlobalVolume: function (globalVolume)
+    {
 
         //  this._volume is the % of the global volume this sound should be played at
 
@@ -1127,7 +1034,8 @@ Phaser.Sound.prototype = {
     * @method Phaser.Sound#destroy
     * @param {boolean} [remove=true] - If true this Sound is automatically removed from the SoundManager.
     */
-    destroy: function (remove) {
+    destroy: function (remove)
+    {
 
         if (remove === undefined) { remove = true; }
 
@@ -1155,6 +1063,66 @@ Phaser.Sound.prototype = {
             this.onMute.dispose();
             this.onMarkerComplete.dispose();
         }
+    },
+
+    _createSourceAndConnect: function ()
+    {
+
+        this._sound = this.context.createBufferSource();
+        this._sound.connect(this.externalNode || this.gainNode);
+        this._buffer = this.game.cache.getSoundData(this.key);
+        this._sound.buffer = this._buffer;
+        this._sourceId++;
+
+    },
+
+    _disconnectSource: function ()
+    {
+
+        this._sound.disconnect(this.externalNode || this.gainNode);
+
+    },
+
+    _startSource: function (when, offset, duration)
+    {
+
+        this._sound.start(when || 0, offset, duration);
+
+    },
+
+    _stopSourceAndDisconnect: function ()
+    {
+
+        // Firefox calls onended() after _sound.stop(). Chrome and Safari do not. (#530)
+        this._removeOnEndedHandler();
+
+        try
+        {
+            this._sound.stop(0);
+        }
+        catch (e)
+        {
+            //  Thanks Android 4.4
+        }
+
+        this._disconnectSource();
+
+        this._sound = null;
+
+    },
+
+    _addOnEndedHandler: function ()
+    {
+
+        this._sound.onended = this.onEndedHandler.bind(this);
+
+    },
+
+    _removeOnEndedHandler: function ()
+    {
+
+        this._sound.onended = null;
+
     }
 
 };
@@ -1166,9 +1134,10 @@ Phaser.Sound.prototype.constructor = Phaser.Sound;
 * @property {boolean} isDecoding - Returns true if the sound file is still decoding.
 * @readonly
 */
-Object.defineProperty(Phaser.Sound.prototype, "isDecoding", {
+Object.defineProperty(Phaser.Sound.prototype, 'isDecoding', {
 
-    get: function () {
+    get: function ()
+    {
         return this.game.cache.getSound(this.key).isDecoding;
     }
 
@@ -1179,9 +1148,10 @@ Object.defineProperty(Phaser.Sound.prototype, "isDecoding", {
 * @property {boolean} isDecoded - Returns true if the sound file has decoded.
 * @readonly
 */
-Object.defineProperty(Phaser.Sound.prototype, "isDecoded", {
+Object.defineProperty(Phaser.Sound.prototype, 'isDecoded', {
 
-    get: function () {
+    get: function ()
+    {
         return this.game.cache.isSoundDecoded(this.key);
     }
 
@@ -1191,15 +1161,17 @@ Object.defineProperty(Phaser.Sound.prototype, "isDecoded", {
 * @name Phaser.Sound#mute
 * @property {boolean} mute - Gets or sets the muted state of this sound.
 */
-Object.defineProperty(Phaser.Sound.prototype, "mute", {
+Object.defineProperty(Phaser.Sound.prototype, 'mute', {
 
-    get: function () {
+    get: function ()
+    {
 
         return (this._muted || this.game.sound.mute);
 
     },
 
-    set: function (value) {
+    set: function (value)
+    {
 
         value = value || false;
 
@@ -1246,13 +1218,15 @@ Object.defineProperty(Phaser.Sound.prototype, "mute", {
 * @name Phaser.Sound#volume
 * @property {number} volume - Gets or sets the volume of this sound, a value between 0 and 1. The value given is clamped to the range 0 to 1.
 */
-Object.defineProperty(Phaser.Sound.prototype, "volume", {
+Object.defineProperty(Phaser.Sound.prototype, 'volume', {
 
-    get: function () {
+    get: function ()
+    {
         return this._volume;
     },
 
-    set: function (value) {
+    set: function (value)
+    {
 
         //  Causes an Index size error if you don't clamp the value
         if (this.usingAudioTag)
@@ -1277,6 +1251,15 @@ Object.defineProperty(Phaser.Sound.prototype, "volume", {
         {
             this._sound.volume = this._globalVolume * value;
         }
+    }
+
+});
+
+Object.defineProperty(Phaser.Sound.prototype, 'sourceId', {
+
+    get: function ()
+    {
+        return this._sound ? this._sourceId : null;
     }
 
 });

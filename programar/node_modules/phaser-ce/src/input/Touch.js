@@ -13,12 +13,20 @@
 * @constructor
 * @param {Phaser.Game} game - A reference to the currently running game.
 */
-Phaser.Touch = function (game) {
+Phaser.Touch = function (game)
+{
 
     /**
     * @property {Phaser.Game} game - A reference to the currently running game.
     */
     this.game = game;
+
+    /**
+    * Whether the input handler is active.
+    * @property {boolean} active
+    * @readOnly
+    */
+    this.active = false;
 
     /**
     * Touch events will only be processed if enabled.
@@ -124,53 +132,66 @@ Phaser.Touch.prototype = {
     * Starts the event listeners running.
     * @method Phaser.Touch#start
     */
-    start: function () {
+    start: function ()
+    {
+
+        if (!this.game.device.touch)
+        {
+            return false;
+        }
 
         if (this._onTouchStart !== null)
         {
             //  Avoid setting multiple listeners
-            return;
+            return false;
         }
 
         var _this = this;
 
-        if (this.game.device.touch)
+        this._onTouchStart = function (event)
         {
-            this._onTouchStart = function (event) {
-                return _this.onTouchStart(event);
-            };
+            return _this.onTouchStart(event);
+        };
 
-            this._onTouchMove = function (event) {
-                return _this.onTouchMove(event);
-            };
+        this._onTouchMove = function (event)
+        {
+            return _this.onTouchMove(event);
+        };
 
-            this._onTouchEnd = function (event) {
-                return _this.onTouchEnd(event);
-            };
+        this._onTouchEnd = function (event)
+        {
+            return _this.onTouchEnd(event);
+        };
 
-            this._onTouchEnter = function (event) {
-                return _this.onTouchEnter(event);
-            };
+        this._onTouchEnter = function (event)
+        {
+            return _this.onTouchEnter(event);
+        };
 
-            this._onTouchLeave = function (event) {
-                return _this.onTouchLeave(event);
-            };
+        this._onTouchLeave = function (event)
+        {
+            return _this.onTouchLeave(event);
+        };
 
-            this._onTouchCancel = function (event) {
-                return _this.onTouchCancel(event);
-            };
+        this._onTouchCancel = function (event)
+        {
+            return _this.onTouchCancel(event);
+        };
 
-            this.game.canvas.addEventListener('touchstart', this._onTouchStart, false);
-            this.game.canvas.addEventListener('touchmove', this._onTouchMove, false);
-            this.game.canvas.addEventListener('touchend', this._onTouchEnd, false);
-            this.game.canvas.addEventListener('touchcancel', this._onTouchCancel, false);
+        this.game.canvas.addEventListener('touchstart', this._onTouchStart, false);
+        this.game.canvas.addEventListener('touchmove', this._onTouchMove, false);
+        this.game.canvas.addEventListener('touchend', this._onTouchEnd, false);
+        this.game.canvas.addEventListener('touchcancel', this._onTouchCancel, false);
 
-            if (!this.game.device.cocoonJS)
-            {
-                this.game.canvas.addEventListener('touchenter', this._onTouchEnter, false);
-                this.game.canvas.addEventListener('touchleave', this._onTouchLeave, false);
-            }
+        if (!this.game.device.cocoonJS)
+        {
+            this.game.canvas.addEventListener('touchenter', this._onTouchEnter, false);
+            this.game.canvas.addEventListener('touchleave', this._onTouchLeave, false);
         }
+
+        this.active = true;
+
+        return true;
 
     },
 
@@ -178,9 +199,11 @@ Phaser.Touch.prototype = {
     * Consumes all touchmove events on the document (only enable this if you know you need it!).
     * @method Phaser.Touch#consumeTouchMove
     */
-    consumeDocumentTouches: function () {
+    consumeDocumentTouches: function ()
+    {
 
-        this._documentTouchMove = function (event) {
+        this._documentTouchMove = function (event)
+        {
             event.preventDefault();
         };
 
@@ -193,7 +216,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchStart
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchStart: function (event) {
+    onTouchStart: function (event)
+    {
 
         this.game.input.executeTouchLockCallbacks(false, event);
 
@@ -230,7 +254,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchCancel
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchCancel: function (event) {
+    onTouchCancel: function (event)
+    {
 
         this.event = event;
 
@@ -264,7 +289,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchEnter
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchEnter: function (event) {
+    onTouchEnter: function (event)
+    {
 
         this.event = event;
 
@@ -291,7 +317,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchLeave
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchLeave: function (event) {
+    onTouchLeave: function (event)
+    {
 
         this.event = event;
 
@@ -312,7 +339,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchMove
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchMove: function (event) {
+    onTouchMove: function (event)
+    {
 
         this.event = event;
 
@@ -338,7 +366,8 @@ Phaser.Touch.prototype = {
     * @method Phaser.Touch#onTouchEnd
     * @param {TouchEvent} event - The native event from the browser. This gets stored in Touch.event.
     */
-    onTouchEnd: function (event) {
+    onTouchEnd: function (event)
+    {
 
         this.game.input.executeTouchLockCallbacks(true, event);
 
@@ -368,17 +397,22 @@ Phaser.Touch.prototype = {
     * Stop the event listeners.
     * @method Phaser.Touch#stop
     */
-    stop: function () {
+    stop: function ()
+    {
 
-        if (this.game.device.touch)
+        if (!this.game.device.touch)
         {
-            this.game.canvas.removeEventListener('touchstart', this._onTouchStart);
-            this.game.canvas.removeEventListener('touchmove', this._onTouchMove);
-            this.game.canvas.removeEventListener('touchend', this._onTouchEnd);
-            this.game.canvas.removeEventListener('touchenter', this._onTouchEnter);
-            this.game.canvas.removeEventListener('touchleave', this._onTouchLeave);
-            this.game.canvas.removeEventListener('touchcancel', this._onTouchCancel);
+            return;
         }
+
+        this.game.canvas.removeEventListener('touchstart', this._onTouchStart);
+        this.game.canvas.removeEventListener('touchmove', this._onTouchMove);
+        this.game.canvas.removeEventListener('touchend', this._onTouchEnd);
+        this.game.canvas.removeEventListener('touchenter', this._onTouchEnter);
+        this.game.canvas.removeEventListener('touchleave', this._onTouchLeave);
+        this.game.canvas.removeEventListener('touchcancel', this._onTouchCancel);
+
+        this.active = false;
 
     }
 

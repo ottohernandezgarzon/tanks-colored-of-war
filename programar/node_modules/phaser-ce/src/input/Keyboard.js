@@ -18,12 +18,20 @@
 * @constructor
 * @param {Phaser.Game} game - A reference to the currently running game.
 */
-Phaser.Keyboard = function (game) {
+Phaser.Keyboard = function (game)
+{
 
     /**
     * @property {Phaser.Game} game - Local reference to game.
     */
     this.game = game;
+
+    /**
+    * Whether the handler has started.
+    * @property {boolean} active
+    * @default
+    */
+    this.active = false;
 
     /**
     * Keyboard input will only be processed if enabled.
@@ -120,7 +128,8 @@ Phaser.Keyboard.prototype = {
     * @param {function} [onUp=null] - This callback is invoked every time a key is released.
     * @param {function} [onPress=null] - This callback is invoked every time the onkeypress event is raised.
     */
-    addCallbacks: function (context, onDown, onUp, onPress) {
+    addCallbacks: function (context, onDown, onUp, onPress)
+    {
 
         this.callbackContext = context;
 
@@ -146,7 +155,8 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#removeCallbacks
     */
-    removeCallbacks: function () {
+    removeCallbacks: function ()
+    {
 
         this.callbackContext = this;
         this.onDownCallback = null;
@@ -163,7 +173,8 @@ Phaser.Keyboard.prototype = {
     * @param {integer} keycode - The {@link Phaser.KeyCode keycode} of the key.
     * @return {Phaser.Key} The Key object which you can store locally and reference directly.
     */
-    addKey: function (keycode) {
+    addKey: function (keycode)
+    {
 
         if (!this._keys[keycode])
         {
@@ -189,7 +200,8 @@ Phaser.Keyboard.prototype = {
     * @param {object} keys - A key mapping object, i.e. `{ 'up': Phaser.KeyCode.W, 'down': Phaser.KeyCode.S }` or `{ 'up': 52, 'down': 53 }`.
     * @return {object} An object containing the properties mapped to {@link Phaser.Key} values.
     */
-    addKeys: function (keys) {
+    addKeys: function (keys)
+    {
 
         var output = {};
 
@@ -208,7 +220,8 @@ Phaser.Keyboard.prototype = {
     * @method Phaser.Keyboard#removeKey
     * @param {integer} keycode - The {@link Phaser.KeyCode keycode} of the key to remove.
     */
-    removeKey: function (keycode) {
+    removeKey: function (keycode)
+    {
 
         if (this._keys[keycode])
         {
@@ -225,9 +238,10 @@ Phaser.Keyboard.prototype = {
     * @method Phaser.Keyboard#createCursorKeys
     * @return {object} An object containing properties: `up`, `down`, `left` and `right` of {@link Phaser.Key} objects.
     */
-    createCursorKeys: function () {
+    createCursorKeys: function ()
+    {
 
-        return this.addKeys({ 'up': Phaser.KeyCode.UP, 'down': Phaser.KeyCode.DOWN, 'left': Phaser.KeyCode.LEFT, 'right': Phaser.KeyCode.RIGHT });
+        return this.addKeys({ up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN, left: Phaser.KeyCode.LEFT, right: Phaser.KeyCode.RIGHT });
 
     },
 
@@ -237,37 +251,46 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#start
     * @protected
+    * @return {boolean}
     */
-    start: function () {
+    start: function ()
+    {
 
         if (this.game.device.cocoonJS)
         {
-            return;
+            return false;
         }
 
-        if (this._onKeyDown !== null)
+        if (this.active)
         {
             //  Avoid setting multiple listeners
-            return;
+            return false;
         }
 
         var _this = this;
 
-        this._onKeyDown = function (event) {
+        this._onKeyDown = function (event)
+        {
             return _this.processKeyDown(event);
         };
 
-        this._onKeyUp = function (event) {
+        this._onKeyUp = function (event)
+        {
             return _this.processKeyUp(event);
         };
 
-        this._onKeyPress = function (event) {
+        this._onKeyPress = function (event)
+        {
             return _this.processKeyPress(event);
         };
 
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
         window.addEventListener('keypress', this._onKeyPress, false);
+
+        this.active = true;
+
+        return true;
 
     },
 
@@ -276,7 +299,8 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#stop
     */
-    stop: function () {
+    stop: function ()
+    {
 
         window.removeEventListener('keydown', this._onKeyDown);
         window.removeEventListener('keyup', this._onKeyUp);
@@ -286,6 +310,8 @@ Phaser.Keyboard.prototype = {
         this._onKeyUp = null;
         this._onKeyPress = null;
 
+        this.active = false;
+
     },
 
     /**
@@ -294,7 +320,8 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#destroy
     */
-    destroy: function () {
+    destroy: function ()
+    {
 
         this.stop();
 
@@ -317,7 +344,8 @@ Phaser.Keyboard.prototype = {
     * @method Phaser.Keyboard#addKeyCapture
     * @param {integer|integer[]|object} keycode - Either a single {@link Phaser.KeyCode keycode} or an array/hash of keycodes such as `[65, 67, 68]`.
     */
-    addKeyCapture: function (keycode) {
+    addKeyCapture: function (keycode)
+    {
 
         if (typeof keycode === 'object')
         {
@@ -338,7 +366,8 @@ Phaser.Keyboard.prototype = {
     * @method Phaser.Keyboard#removeKeyCapture
     * @param {integer} keycode - The {@link Phaser.KeyCode keycode} to remove capturing of.
     */
-    removeKeyCapture: function (keycode) {
+    removeKeyCapture: function (keycode)
+    {
 
         delete this._capture[keycode];
 
@@ -349,7 +378,8 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#clearCaptures
     */
-    clearCaptures: function () {
+    clearCaptures: function ()
+    {
 
         this._capture = {};
 
@@ -360,7 +390,8 @@ Phaser.Keyboard.prototype = {
     *
     * @method Phaser.Keyboard#update
     */
-    update: function () {
+    update: function ()
+    {
 
         this._i = this._keys.length;
 
@@ -381,7 +412,8 @@ Phaser.Keyboard.prototype = {
     * @param {KeyboardEvent} event
     * @protected
     */
-    processKeyDown: function (event) {
+    processKeyDown: function (event)
+    {
 
         this.event = event;
 
@@ -421,7 +453,8 @@ Phaser.Keyboard.prototype = {
     * @param {KeyboardEvent} event
     * @protected
     */
-    processKeyPress: function (event) {
+    processKeyPress: function (event)
+    {
 
         this.pressEvent = event;
 
@@ -444,7 +477,8 @@ Phaser.Keyboard.prototype = {
     * @param {KeyboardEvent} event
     * @protected
     */
-    processKeyUp: function (event) {
+    processKeyUp: function (event)
+    {
 
         this.event = event;
 
@@ -480,7 +514,8 @@ Phaser.Keyboard.prototype = {
     * @method Phaser.Keyboard#reset
     * @param {boolean} [hard=true] - A soft reset won't reset any events or callbacks that are bound to the Keys. A hard reset will.
     */
-    reset: function (hard) {
+    reset: function (hard)
+    {
 
         if (hard === undefined) { hard = true; }
 
@@ -507,7 +542,8 @@ Phaser.Keyboard.prototype = {
     * @param {number} [duration=50] - The duration within which the key is considered as being just pressed. Given in ms.
     * @return {boolean} True if the key was pressed down within the given duration, false if not or null if the Key wasn't found.
     */
-    downDuration: function (keycode, duration) {
+    downDuration: function (keycode, duration)
+    {
 
         if (this._keys[keycode])
         {
@@ -529,7 +565,8 @@ Phaser.Keyboard.prototype = {
     * @param {number} [duration=50] - The duration within which the key is considered as being just released. Given in ms.
     * @return {boolean} True if the key was released within the given duration, false if not or null if the Key wasn't found.
     */
-    upDuration: function (keycode, duration) {
+    upDuration: function (keycode, duration)
+    {
 
         if (this._keys[keycode])
         {
@@ -542,7 +579,8 @@ Phaser.Keyboard.prototype = {
 
     },
 
-    justPressed: function (keycode) {
+    justPressed: function (keycode)
+    {
 
         if (this._keys[keycode])
         {
@@ -555,7 +593,8 @@ Phaser.Keyboard.prototype = {
 
     },
 
-    justReleased: function (keycode) {
+    justReleased: function (keycode)
+    {
 
         if (this._keys[keycode])
         {
@@ -575,7 +614,8 @@ Phaser.Keyboard.prototype = {
     * @param {integer} keycode - The {@link Phaser.KeyCode keycode} of the key to check: i.e. Phaser.KeyCode.UP or Phaser.KeyCode.SPACEBAR.
     * @return {boolean} True if the key is currently down, false if not or null if the Key wasn't found.
     */
-    isDown: function (keycode) {
+    isDown: function (keycode)
+    {
 
         if (this._keys[keycode])
         {
@@ -596,9 +636,10 @@ Phaser.Keyboard.prototype = {
 * @property {string} lastChar - The string value of the most recently pressed key.
 * @readonly
 */
-Object.defineProperty(Phaser.Keyboard.prototype, "lastChar", {
+Object.defineProperty(Phaser.Keyboard.prototype, 'lastChar', {
 
-    get: function () {
+    get: function ()
+    {
 
         if (this.event && this.event.charCode === 32)
         {
@@ -623,9 +664,10 @@ Object.defineProperty(Phaser.Keyboard.prototype, "lastChar", {
 * @property {Phaser.Key} lastKey - The most recently pressed Key.
 * @readonly
 */
-Object.defineProperty(Phaser.Keyboard.prototype, "lastKey", {
+Object.defineProperty(Phaser.Keyboard.prototype, 'lastKey', {
 
-    get: function () {
+    get: function ()
+    {
 
         return this._keys[this._k];
 
@@ -652,207 +694,308 @@ Phaser.Keyboard.prototype.constructor = Phaser.Keyboard;
 */
 Phaser.KeyCode = {
     /** @static */
-    A: "A".charCodeAt(0),
+    A: 'A'.charCodeAt(0),
+
     /** @static */
-    B: "B".charCodeAt(0),
+    B: 'B'.charCodeAt(0),
+
     /** @static */
-    C: "C".charCodeAt(0),
+    C: 'C'.charCodeAt(0),
+
     /** @static */
-    D: "D".charCodeAt(0),
+    D: 'D'.charCodeAt(0),
+
     /** @static */
-    E: "E".charCodeAt(0),
+    E: 'E'.charCodeAt(0),
+
     /** @static */
-    F: "F".charCodeAt(0),
+    F: 'F'.charCodeAt(0),
+
     /** @static */
-    G: "G".charCodeAt(0),
+    G: 'G'.charCodeAt(0),
+
     /** @static */
-    H: "H".charCodeAt(0),
+    H: 'H'.charCodeAt(0),
+
     /** @static */
-    I: "I".charCodeAt(0),
+    I: 'I'.charCodeAt(0),
+
     /** @static */
-    J: "J".charCodeAt(0),
+    J: 'J'.charCodeAt(0),
+
     /** @static */
-    K: "K".charCodeAt(0),
+    K: 'K'.charCodeAt(0),
+
     /** @static */
-    L: "L".charCodeAt(0),
+    L: 'L'.charCodeAt(0),
+
     /** @static */
-    M: "M".charCodeAt(0),
+    M: 'M'.charCodeAt(0),
+
     /** @static */
-    N: "N".charCodeAt(0),
+    N: 'N'.charCodeAt(0),
+
     /** @static */
-    O: "O".charCodeAt(0),
+    O: 'O'.charCodeAt(0),
+
     /** @static */
-    P: "P".charCodeAt(0),
+    P: 'P'.charCodeAt(0),
+
     /** @static */
-    Q: "Q".charCodeAt(0),
+    Q: 'Q'.charCodeAt(0),
+
     /** @static */
-    R: "R".charCodeAt(0),
+    R: 'R'.charCodeAt(0),
+
     /** @static */
-    S: "S".charCodeAt(0),
+    S: 'S'.charCodeAt(0),
+
     /** @static */
-    T: "T".charCodeAt(0),
+    T: 'T'.charCodeAt(0),
+
     /** @static */
-    U: "U".charCodeAt(0),
+    U: 'U'.charCodeAt(0),
+
     /** @static */
-    V: "V".charCodeAt(0),
+    V: 'V'.charCodeAt(0),
+
     /** @static */
-    W: "W".charCodeAt(0),
+    W: 'W'.charCodeAt(0),
+
     /** @static */
-    X: "X".charCodeAt(0),
+    X: 'X'.charCodeAt(0),
+
     /** @static */
-    Y: "Y".charCodeAt(0),
+    Y: 'Y'.charCodeAt(0),
+
     /** @static */
-    Z: "Z".charCodeAt(0),
+    Z: 'Z'.charCodeAt(0),
+
     /** @static */
-    ZERO: "0".charCodeAt(0),
+    ZERO: '0'.charCodeAt(0),
+
     /** @static */
-    ONE: "1".charCodeAt(0),
+    ONE: '1'.charCodeAt(0),
+
     /** @static */
-    TWO: "2".charCodeAt(0),
+    TWO: '2'.charCodeAt(0),
+
     /** @static */
-    THREE: "3".charCodeAt(0),
+    THREE: '3'.charCodeAt(0),
+
     /** @static */
-    FOUR: "4".charCodeAt(0),
+    FOUR: '4'.charCodeAt(0),
+
     /** @static */
-    FIVE: "5".charCodeAt(0),
+    FIVE: '5'.charCodeAt(0),
+
     /** @static */
-    SIX: "6".charCodeAt(0),
+    SIX: '6'.charCodeAt(0),
+
     /** @static */
-    SEVEN: "7".charCodeAt(0),
+    SEVEN: '7'.charCodeAt(0),
+
     /** @static */
-    EIGHT: "8".charCodeAt(0),
+    EIGHT: '8'.charCodeAt(0),
+
     /** @static */
-    NINE: "9".charCodeAt(0),
+    NINE: '9'.charCodeAt(0),
+
     /** @static */
     NUMPAD_0: 96,
+
     /** @static */
     NUMPAD_1: 97,
+
     /** @static */
     NUMPAD_2: 98,
+
     /** @static */
     NUMPAD_3: 99,
+
     /** @static */
     NUMPAD_4: 100,
+
     /** @static */
     NUMPAD_5: 101,
+
     /** @static */
     NUMPAD_6: 102,
+
     /** @static */
     NUMPAD_7: 103,
+
     /** @static */
     NUMPAD_8: 104,
+
     /** @static */
     NUMPAD_9: 105,
+
     /** @static */
     NUMPAD_MULTIPLY: 106,
+
     /** @static */
     NUMPAD_ADD: 107,
+
     /** @static */
     NUMPAD_ENTER: 108,
+
     /** @static */
     NUMPAD_SUBTRACT: 109,
+
     /** @static */
     NUMPAD_DECIMAL: 110,
+
     /** @static */
     NUMPAD_DIVIDE: 111,
+
     /** @static */
     F1: 112,
+
     /** @static */
     F2: 113,
+
     /** @static */
     F3: 114,
+
     /** @static */
     F4: 115,
+
     /** @static */
     F5: 116,
+
     /** @static */
     F6: 117,
+
     /** @static */
     F7: 118,
+
     /** @static */
     F8: 119,
+
     /** @static */
     F9: 120,
+
     /** @static */
     F10: 121,
+
     /** @static */
     F11: 122,
+
     /** @static */
     F12: 123,
+
     /** @static */
     F13: 124,
+
     /** @static */
     F14: 125,
+
     /** @static */
     F15: 126,
+
     /** @static */
     COLON: 186,
+
     /** @static */
     EQUALS: 187,
+
     /** @static */
     COMMA: 188,
+
     /** @static */
     UNDERSCORE: 189,
+
     /** @static */
     PERIOD: 190,
+
     /** @static */
     QUESTION_MARK: 191,
+
     /** @static */
     TILDE: 192,
+
     /** @static */
     OPEN_BRACKET: 219,
+
     /** @static */
     BACKWARD_SLASH: 220,
+
     /** @static */
     CLOSED_BRACKET: 221,
+
     /** @static */
     QUOTES: 222,
+
     /** @static */
     BACKSPACE: 8,
+
     /** @static */
     TAB: 9,
+
     /** @static */
     CLEAR: 12,
+
     /** @static */
     ENTER: 13,
+
     /** @static */
     SHIFT: 16,
+
     /** @static */
     CONTROL: 17,
+
     /** @static */
     ALT: 18,
+
     /** @static */
     CAPS_LOCK: 20,
+
     /** @static */
     ESC: 27,
+
     /** @static */
     SPACEBAR: 32,
+
     /** @static */
     PAGE_UP: 33,
+
     /** @static */
     PAGE_DOWN: 34,
+
     /** @static */
     END: 35,
+
     /** @static */
     HOME: 36,
+
     /** @static */
     LEFT: 37,
+
     /** @static */
     UP: 38,
+
     /** @static */
     RIGHT: 39,
+
     /** @static */
     DOWN: 40,
+
     /** @static */
     PLUS: 43,
+
     /** @static */
     MINUS: 44,
+
     /** @static */
     INSERT: 45,
+
     /** @static */
     DELETE: 46,
+
     /** @static */
     HELP: 47,
+
     /** @static */
     NUM_LOCK: 144
 };

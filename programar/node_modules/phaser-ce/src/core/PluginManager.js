@@ -13,7 +13,8 @@
 * @constructor
 * @param {Phaser.Game} game - A reference to the currently running game.
 */
-Phaser.PluginManager = function(game) {
+Phaser.PluginManager = function (game)
+{
 
     /**
     * @property {Phaser.Game} game - A reference to the currently running game.
@@ -50,7 +51,8 @@ Phaser.PluginManager.prototype = {
     * @param {...*} parameter - Additional arguments that will be passed to the Plugin.init method.
     * @return {Phaser.Plugin} The Plugin that was added to the manager.
     */
-    add: function (plugin) {
+    add: function (plugin)
+    {
 
         var args = Array.prototype.slice.call(arguments, 1);
         var result = false;
@@ -67,31 +69,31 @@ Phaser.PluginManager.prototype = {
         }
 
         //  Check for methods now to avoid having to do this every loop
-        if (typeof plugin['preUpdate'] === 'function')
+        if (typeof plugin.preUpdate === 'function')
         {
             plugin.hasPreUpdate = true;
             result = true;
         }
 
-        if (typeof plugin['update'] === 'function')
+        if (typeof plugin.update === 'function')
         {
             plugin.hasUpdate = true;
             result = true;
         }
 
-        if (typeof plugin['postUpdate'] === 'function')
+        if (typeof plugin.postUpdate === 'function')
         {
             plugin.hasPostUpdate = true;
             result = true;
         }
 
-        if (typeof plugin['render'] === 'function')
+        if (typeof plugin.render === 'function')
         {
             plugin.hasRender = true;
             result = true;
         }
 
-        if (typeof plugin['postRender'] === 'function')
+        if (typeof plugin.postRender === 'function')
         {
             plugin.hasPostRender = true;
             result = true;
@@ -113,7 +115,7 @@ Phaser.PluginManager.prototype = {
             this._len = this.plugins.push(plugin);
 
             // Allows plugins to run potentially destructive code outside of the constructor, and only if being added to the PluginManager
-            if (typeof plugin['init'] === 'function')
+            if (typeof plugin.init === 'function')
             {
                 plugin.init.apply(plugin, args);
             }
@@ -133,7 +135,8 @@ Phaser.PluginManager.prototype = {
     * @param {Phaser.Plugin} plugin - The plugin to be removed.
     * @param {boolean} [destroy=true] - Call destroy on the plugin that is removed?
     */
-    remove: function (plugin, destroy) {
+    remove: function (plugin, destroy)
+    {
 
         if (destroy === undefined) { destroy = true; }
 
@@ -161,7 +164,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#removeAll
     */
-    removeAll: function() {
+    removeAll: function ()
+    {
 
         this._i = this._len;
 
@@ -181,7 +185,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#preUpdate
     */
-    preUpdate: function () {
+    preUpdate: function ()
+    {
 
         this._i = this._len;
 
@@ -201,7 +206,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#update
     */
-    update: function () {
+    update: function ()
+    {
 
         this._i = this._len;
 
@@ -222,7 +228,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#postUpdate
     */
-    postUpdate: function () {
+    postUpdate: function ()
+    {
 
         this._i = this._len;
 
@@ -242,7 +249,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#render
     */
-    render: function () {
+    render: function ()
+    {
 
         this._i = this._len;
 
@@ -262,7 +270,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#postRender
     */
-    postRender: function () {
+    postRender: function ()
+    {
 
         this._i = this._len;
 
@@ -281,7 +290,8 @@ Phaser.PluginManager.prototype = {
     *
     * @method Phaser.PluginManager#destroy
     */
-    destroy: function () {
+    destroy: function ()
+    {
 
         this.removeAll();
 

@@ -18,7 +18,8 @@
 * @constructor
 * @param {Phaser.Game} game - A reference to the currently running game.
 */
-Phaser.Mouse = function (game) {
+Phaser.Mouse = function (game)
+{
 
     /**
     * @property {Phaser.Game} game - A reference to the currently running game.
@@ -57,54 +58,32 @@ Phaser.Mouse = function (game) {
     this.mouseOverCallback = null;
 
     /**
-     * @property {function} mouseWheelCallback - A callback that can be fired when the mousewheel is used.
-     */
-    this.mouseWheelCallback = null;
-
-    /**
-    * @property {boolean} capture - If true the DOM mouse events will have event.preventDefault applied to them, if false they will propagate fully.
+    * @property {boolean} capture - If true the DOM mouse events will have event.preventDefault applied to them.
     */
     this.capture = false;
 
     /**
-    * This property was removed in Phaser 2.4 and should no longer be used.
-    * Instead please see the Pointer button properties such as `Pointer.leftButton`, `Pointer.rightButton` and so on.
-    * Or Pointer.button holds the DOM event button value if you require that.
-    * @property {number} button
-    * @default
+    * @property {boolean} - Whether the handler has started.
+    * @readOnly
+    * @see Phaser.Mouse#start
+    * @see Phaser.Mouse#stop
     */
-    this.button = -1;
+    this.active = false;
 
     /**
-     * The direction of the _last_ mousewheel usage 1 for up -1 for down.
-     * @property {number} wheelDelta
-     */
-    this.wheelDelta = 0;
-
-    /**
-    * Mouse input will only be processed if enabled.
+    * Whether mouse input is passed to the Input Manager and Mouse Pointer.
+    * When enabled is false, `game.input` and `game.input.mousePointer` are not updated by this handler.
+    * The handler is still running and will call any added callbacks and apply {@link Phaser.Mouse#capture}.
     * @property {boolean} enabled
     * @default
     */
     this.enabled = true;
 
     /**
-    * @property {boolean} locked - If the mouse has been Pointer Locked successfully this will be set to true.
-    * @default
-    */
-    this.locked = false;
-
-    /**
     * @property {boolean} stopOnGameOut - If true Pointer.stop will be called if the mouse leaves the game canvas.
     * @default
     */
     this.stopOnGameOut = false;
-
-    /**
-    * @property {Phaser.Signal} pointerLock - This event is dispatched when the browser enters or leaves pointer lock state.
-    * @default
-    */
-    this.pointerLock = new Phaser.Signal();
 
     /**
     * The browser mouse DOM event. Will be null if no mouse event has ever been received.
@@ -143,19 +122,6 @@ Phaser.Mouse = function (game) {
     * @private
     */
     this._onMouseOver = null;
-
-    /**
-    * @property {function} _onMouseWheel - Internal event handler reference.
-    * @private
-    */
-    this._onMouseWheel = null;
-
-    /**
-    * Wheel proxy event object, if required. Shared for all wheel events for this mouse.
-    * @property {Phaser.Mouse~WheelEventProxy} _wheelEvent
-    * @private
-    */
-    this._wheelEvent = null;
 
 };
 
@@ -198,12 +164,16 @@ Phaser.Mouse.FORWARD_BUTTON = 4;
 /**
  * @constant
  * @type {number}
+ * @deprecated
+ * @see Phaser.MouseWheel.UP
  */
 Phaser.Mouse.WHEEL_UP = 1;
 
 /**
  * @constant
  * @type {number}
+ * @deprecated
+ * @see Phaser.MouseWheel.DOWN
  */
 Phaser.Mouse.WHEEL_DOWN = -1;
 
@@ -212,53 +182,60 @@ Phaser.Mouse.prototype = {
     /**
     * Starts the event listeners running.
     * @method Phaser.Mouse#start
+    * @return {boolean} - Whether the handler was started.
     */
-    start: function () {
+    start: function ()
+    {
 
-        if (this.game.device.android && this.game.device.chrome === false)
+        var device = this.game.device;
+
+        if (device.isAndroidStockBrowser() && this.input.touch.active)
         {
             //  Android stock browser fires mouse events even if you preventDefault on the touchStart, so ...
-            return;
+            return false;
         }
 
         if (this._onMouseDown !== null)
         {
             //  Avoid setting multiple listeners
-            return;
+            return false;
         }
 
         var _this = this;
 
-        this._onMouseDown = function (event) {
+        this._onMouseDown = function (event)
+        {
             return _this.onMouseDown(event);
         };
 
-        this._onMouseMove = function (event) {
+        this._onMouseMove = function (event)
+        {
             return _this.onMouseMove(event);
         };
 
-        this._onMouseUp = function (event) {
+        this._onMouseUp = function (event)
+        {
             return _this.onMouseUp(event);
         };
 
-        this._onMouseUpGlobal = function (event) {
+        this._onMouseUpGlobal = function (event)
+        {
             return _this.onMouseUpGlobal(event);
         };
 
-        this._onMouseOutGlobal = function (event) {
+        this._onMouseOutGlobal = function (event)
+        {
             return _this.onMouseOutGlobal(event);
         };
 
-        this._onMouseOut = function (event) {
+        this._onMouseOut = function (event)
+        {
             return _this.onMouseOut(event);
         };
 
-        this._onMouseOver = function (event) {
+        this._onMouseOver = function (event)
+        {
             return _this.onMouseOver(event);
-        };
-
-        this._onMouseWheel = function (event) {
-            return _this.onMouseWheel(event);
         };
 
         var canvas = this.game.canvas;
@@ -267,7 +244,7 @@ Phaser.Mouse.prototype = {
         canvas.addEventListener('mousemove', this._onMouseMove, true);
         canvas.addEventListener('mouseup', this._onMouseUp, true);
 
-        if (!this.game.device.cocoonJS)
+        if (!device.cocoonJS)
         {
             window.addEventListener('mouseup', this._onMouseUpGlobal, true);
             window.addEventListener('mouseout', this._onMouseOutGlobal, true);
@@ -275,21 +252,9 @@ Phaser.Mouse.prototype = {
             canvas.addEventListener('mouseout', this._onMouseOut, true);
         }
 
-        var wheelEvent = this.game.device.wheelEvent;
+        this.active = true;
 
-        if (wheelEvent)
-        {
-            canvas.addEventListener(wheelEvent, this._onMouseWheel, true);
-
-            if (wheelEvent === 'mousewheel')
-            {
-                this._wheelEvent = new WheelEventProxy(-1/40, 1);
-            }
-            else if (wheelEvent === 'DOMMouseScroll')
-            {
-                this._wheelEvent = new WheelEventProxy(1, 1);
-            }
-        }
+        return true;
 
     },
 
@@ -298,7 +263,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseDown
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseDown: function (event) {
+    onMouseDown: function (event)
+    {
 
         this.event = event;
 
@@ -317,7 +283,7 @@ Phaser.Mouse.prototype = {
             return;
         }
 
-        event['identifier'] = 0;
+        event.identifier = 0;
 
         this.input.mousePointer.start(event);
 
@@ -328,7 +294,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseMove
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseMove: function (event) {
+    onMouseMove: function (event)
+    {
 
         this.event = event;
 
@@ -347,7 +314,7 @@ Phaser.Mouse.prototype = {
             return;
         }
 
-        event['identifier'] = 0;
+        event.identifier = 0;
 
         this.input.mousePointer.move(event);
 
@@ -358,7 +325,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseUp
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseUp: function (event) {
+    onMouseUp: function (event)
+    {
 
         this.event = event;
 
@@ -377,7 +345,7 @@ Phaser.Mouse.prototype = {
             return;
         }
 
-        event['identifier'] = 0;
+        event.identifier = 0;
 
         this.input.mousePointer.stop(event);
 
@@ -389,7 +357,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseUpGlobal
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseUpGlobal: function (event) {
+    onMouseUpGlobal: function (event)
+    {
 
         if (!this.input.mousePointer.withinGame)
         {
@@ -398,7 +367,7 @@ Phaser.Mouse.prototype = {
                 this.mouseUpCallback.call(this.callbackContext, event);
             }
 
-            event['identifier'] = 0;
+            event.identifier = 0;
 
             this.input.mousePointer.stop(event);
         }
@@ -411,7 +380,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseOutGlobal
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseOutGlobal: function (event) {
+    onMouseOutGlobal: function (event)
+    {
 
         this.event = event;
 
@@ -448,7 +418,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseOut
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseOut: function (event) {
+    onMouseOut: function (event)
+    {
 
         this.event = event;
 
@@ -471,16 +442,21 @@ Phaser.Mouse.prototype = {
 
         if (this.stopOnGameOut)
         {
-            event['identifier'] = 0;
+            event.identifier = 0;
 
             this.input.mousePointer.stop(event);
         }
 
-        for (var i in this.input.interactiveItems.list)
+        var list = this.input.interactiveItems.list;
+        var i = list.length;
+
+        while (i--)
         {
-            if (this.input.interactiveItems.list[i].enabled === true)
+            var item = list[i];
+
+            if (item.enabled)
             {
-                this.input.interactiveItems.list[i]._pointerOutHandler(this.input.mousePointer);
+                item._pointerOutHandler(this.input.mousePointer);
             }
         }
 
@@ -492,7 +468,8 @@ Phaser.Mouse.prototype = {
     * @method Phaser.Mouse#onMouseOver
     * @param {MouseEvent} event - The native event from the browser. This gets stored in Mouse.event.
     */
-    onMouseOver: function (event) {
+    onMouseOver: function (event)
+    {
 
         this.event = event;
 
@@ -511,31 +488,17 @@ Phaser.Mouse.prototype = {
     },
 
     /**
-     * The internal method that handles the mouse wheel event from the browser.
-     *
-     * @method Phaser.Mouse#onMouseWheel
-     * @param {MouseEvent} event - The native event from the browser.
-     */
-    onMouseWheel: function (event) {
+    * Exit a pointer-locked state.
+    * @method Phaser.Mouse#releasePointerLock
+    * @deprecated
+    * @see Phaser.PointerLock#exit
+    */
+    releasePointerLock: function ()
+    {
 
-        if (this._wheelEvent) {
-            event = this._wheelEvent.bindEvent(event);
-        }
+        console.warn('Deprecated. Please use `input.pointerLock.exit()` instead.');
 
-        this.event = event;
-
-        if (this.capture)
-        {
-            event.preventDefault();
-        }
-
-        // reverse detail for firefox
-        this.wheelDelta = Phaser.Math.clamp(-event.deltaY, -1, 1);
-
-        if (this.mouseWheelCallback)
-        {
-            this.mouseWheelCallback.call(this.callbackContext, event);
-        }
+        return this.input.pointerLock.exit();
 
     },
 
@@ -544,68 +507,15 @@ Phaser.Mouse.prototype = {
     * This is classically known as 'FPS controls', where the pointer can't leave the browser until the user presses an exit key.
     * If the browser successfully enters a locked state the event Phaser.Mouse.pointerLock will be dispatched and the first parameter will be 'true'.
     * @method Phaser.Mouse#requestPointerLock
+    * @deprecated
+    * @see Phaser.PointerLock#request
     */
-    requestPointerLock: function () {
+    requestPointerLock: function ()
+    {
 
-        if (this.game.device.pointerLock)
-        {
-            var element = this.game.canvas;
+        console.warn('Deprecated. Please use `input.pointerLock.request()` instead.');
 
-            element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
-
-            element.requestPointerLock();
-
-            var _this = this;
-
-            this._pointerLockChange = function (event) {
-                return _this.pointerLockChange(event);
-            };
-
-            document.addEventListener('pointerlockchange', this._pointerLockChange, true);
-            document.addEventListener('mozpointerlockchange', this._pointerLockChange, true);
-            document.addEventListener('webkitpointerlockchange', this._pointerLockChange, true);
-        }
-
-    },
-
-    /**
-    * Internal pointerLockChange handler.
-    *
-    * @method Phaser.Mouse#pointerLockChange
-    * @param {Event} event - The native event from the browser. This gets stored in Mouse.event.
-    */
-    pointerLockChange: function (event) {
-
-        var element = this.game.canvas;
-
-        if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element)
-        {
-            //  Pointer was successfully locked
-            this.locked = true;
-            this.pointerLock.dispatch(true, event);
-        }
-        else
-        {
-            //  Pointer was unlocked
-            this.locked = false;
-            this.pointerLock.dispatch(false, event);
-        }
-
-    },
-
-    /**
-    * Internal release pointer lock handler.
-    * @method Phaser.Mouse#releasePointerLock
-    */
-    releasePointerLock: function () {
-
-        document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
-
-        document.exitPointerLock();
-
-        document.removeEventListener('pointerlockchange', this._pointerLockChange, true);
-        document.removeEventListener('mozpointerlockchange', this._pointerLockChange, true);
-        document.removeEventListener('webkitpointerlockchange', this._pointerLockChange, true);
+        return this.input.pointerLock.request();
 
     },
 
@@ -613,7 +523,8 @@ Phaser.Mouse.prototype = {
     * Stop the event listeners.
     * @method Phaser.Mouse#stop
     */
-    stop: function () {
+    stop: function ()
+    {
 
         var canvas = this.game.canvas;
 
@@ -623,19 +534,10 @@ Phaser.Mouse.prototype = {
         canvas.removeEventListener('mouseover', this._onMouseOver, true);
         canvas.removeEventListener('mouseout', this._onMouseOut, true);
 
-        var wheelEvent = this.game.device.wheelEvent;
-
-        if (wheelEvent)
-        {
-            canvas.removeEventListener(wheelEvent, this._onMouseWheel, true);
-        }
-
         window.removeEventListener('mouseup', this._onMouseUpGlobal, true);
         window.removeEventListener('mouseout', this._onMouseOutGlobal, true);
 
-        document.removeEventListener('pointerlockchange', this._pointerLockChange, true);
-        document.removeEventListener('mozpointerlockchange', this._pointerLockChange, true);
-        document.removeEventListener('webkitpointerlockchange', this._pointerLockChange, true);
+        this.active = false;
 
     }
 
@@ -643,86 +545,70 @@ Phaser.Mouse.prototype = {
 
 Phaser.Mouse.prototype.constructor = Phaser.Mouse;
 
-/* jshint latedef:nofunc */
 /**
-* A purely internal event support class to proxy 'wheelscroll' and 'DOMMouseWheel'
-* events to 'wheel'-like events.
+* If the mouse has been Pointer Locked successfully this will be set to true.
 *
-* See https://developer.mozilla.org/en-US/docs/Web/Events/mousewheel for choosing a scale and delta mode.
-*
-* @method Phaser.Mouse#WheelEventProxy
-* @private
-* @param {number} scaleFactor - Scale factor as applied to wheelDelta/wheelDeltaX or details.
-* @param {integer} deltaMode - The reported delta mode.
+* @name Phaser.Mouse#locked
+* @property {boolean} locked
+* @default
+* @deprecated
+* @see Phaser.PointerLock#locked
 */
-function WheelEventProxy (scaleFactor, deltaMode) {
+Object.defineProperty(Phaser.Mouse.prototype, 'locked', {
 
-    /**
-    * @property {number} _scaleFactor - Scale factor as applied to wheelDelta/wheelDeltaX or details.
-    * @private
-    */
-    this._scaleFactor = scaleFactor;
-
-    /**
-    * @property {number} _deltaMode - The reported delta mode.
-    * @private
-    */
-    this._deltaMode = deltaMode;
-
-    /**
-    * @property {any} originalEvent - The original event _currently_ being proxied; the getters will follow suit.
-    * @private
-    */
-    this.originalEvent = null;
-
-}
-
-WheelEventProxy.prototype = {};
-WheelEventProxy.prototype.constructor = WheelEventProxy;
-
-WheelEventProxy.prototype.bindEvent = function (event) {
-
-    // Generate stubs automatically
-    if (!WheelEventProxy._stubsGenerated && event)
+    get: function ()
     {
-        var makeBinder = function (name) {
-
-            return function () {
-                var v = this.originalEvent[name];
-                return typeof v !== 'function' ? v : v.bind(this.originalEvent);
-            };
-
-        };
-
-        for (var prop in event)
-        {
-            if (!(prop in WheelEventProxy.prototype))
-            {
-                Object.defineProperty(WheelEventProxy.prototype, prop, {
-                    get: makeBinder(prop)
-                });
-            }
-        }
-        WheelEventProxy._stubsGenerated = true;
+        return this.input.pointerLock.locked;
     }
 
-    this.originalEvent = event;
-    return this;
+});
 
-};
+/**
+* This event is dispatched when the browser enters or leaves pointer lock state.
+*
+* @name Phaser.Mouse#pointerLock
+* @property {Phaser.Signal} pointerLock
+* @default
+* @deprecated
+* @see Phaser.PointerLock#onChange
+*/
+Object.defineProperty(Phaser.Mouse.prototype, 'pointerLock', {
 
-Object.defineProperties(WheelEventProxy.prototype, {
-    "type": { value: "wheel" },
-    "deltaMode": { get: function () { return this._deltaMode; } },
-    "deltaY": {
-        get: function () {
-            return (this._scaleFactor * (this.originalEvent.wheelDelta || this.originalEvent.detail)) || 0;
-        }
+    get: function ()
+    {
+        return this.input.pointerLock.onChange;
+    }
+
+});
+
+/**
+ * @property {function} mouseWheelCallback - A callback that can be fired when the mousewheel is used.
+ * @deprecated
+ * @see Phaser.MouseWheel#callback
+ */
+Object.defineProperty(Phaser.Mouse.prototype, 'mouseWheelCallback', {
+
+    get: function ()
+    {
+        return this.input.mouseWheel.callback;
     },
-    "deltaX": {
-        get: function () {
-            return (this._scaleFactor * this.originalEvent.wheelDeltaX) || 0;
-        }
-    },
-    "deltaZ": { value: 0 }
+
+    set: function (val)
+    {
+        this.input.mouseWheel.callback = val;
+    }
+
+});
+
+/**
+ * The direction of the _last_ mousewheel usage. 1 for up; -1 for down.
+ * @property {number} wheelDelta
+ * @deprecated
+ * @see Phaser.MouseWheel#delta
+ */
+Object.defineProperty(Phaser.Mouse.prototype, 'wheelDelta', {
+    get: function ()
+    {
+        return this.input.mouseWheel.delta;
+    }
 });

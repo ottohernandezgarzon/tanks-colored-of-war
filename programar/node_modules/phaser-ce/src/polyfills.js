@@ -3,9 +3,23 @@
 * @license      {@link https://github.com/photonstorm/phaser/blob/master/license.txt|MIT License}
 */
 
+if (typeof AudioBufferSourceNode !== 'undefined')
+{
+    if (!AudioBufferSourceNode.prototype.start)
+    {
+        AudioBufferSourceNode.prototype.start = AudioBufferSourceNode.prototype.noteGrainOn;
+    }
+    if (!AudioBufferSourceNode.prototype.stop)
+    {
+        AudioBufferSourceNode.prototype.stop = AudioBufferSourceNode.prototype.noteOff;
+    }
+}
+
 // ES6 Math.trunc - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc
-if (!Math.trunc) {
-    Math.trunc = function trunc(x) {
+if (!Math.trunc)
+{
+    Math.trunc = function trunc (x)
+    {
         return x < 0 ? Math.ceil(x) : Math.floor(x);
     };
 }
@@ -13,28 +27,34 @@ if (!Math.trunc) {
 /**
 * A polyfill for Function.prototype.bind
 */
-if (!Function.prototype.bind) {
+if (!Function.prototype.bind)
+{
 
     /* jshint freeze: false */
-    Function.prototype.bind = (function () {
+    Function.prototype.bind = (function ()
+    {
 
         var slice = Array.prototype.slice;
 
-        return function (thisArg) {
+        return function (thisArg)
+        {
 
-            var target = this, boundArgs = slice.call(arguments, 1);
+            var target = this,
+                boundArgs = slice.call(arguments, 1);
 
             if (typeof target !== 'function')
             {
                 throw new TypeError();
             }
 
-            function bound() {
+            function bound ()
+            {
                 var args = boundArgs.concat(slice.call(arguments));
                 target.apply(this instanceof bound ? this : thisArg, args);
             }
 
-            bound.prototype = (function F(proto) {
+            bound.prototype = (function F (proto)
+            {
                 if (proto)
                 {
                     F.prototype = proto;
@@ -43,7 +63,7 @@ if (!Function.prototype.bind) {
                 if (!(this instanceof F))
                 {
                     /* jshint supernew: true */
-                    return new F;
+                    return new F();
                 }
             })(target.prototype);
 
@@ -69,9 +89,9 @@ if (!Array.isArray)
 */
 if (!Array.prototype.forEach)
 {
-    Array.prototype.forEach = function(fun /*, thisArg */)
+    Array.prototype.forEach = function (fun /* , thisArg */)
     {
-        "use strict";
+        'use strict';
 
         if (this === void 0 || this === null)
         {
@@ -81,7 +101,7 @@ if (!Array.prototype.forEach)
         var t = Object(this);
         var len = t.length >>> 0;
 
-        if (typeof fun !== "function")
+        if (typeof fun !== 'function')
         {
             throw new TypeError();
         }
@@ -103,15 +123,18 @@ if (!Array.prototype.forEach)
 * Source: http://www.html5gamedevs.com/topic/5988-phaser-12-ie9/
 * Cameron Foale (http://www.kibibu.com)
 */
-if (typeof window.Uint32Array !== "function" && typeof window.Uint32Array !== "object")
+if (typeof window.Uint32Array !== 'function' && typeof window.Uint32Array !== 'object')
 {
-    var CheapArray = function(type)
+    var CheapArray = function (type)
     {
-        var proto = new Array(); // jshint ignore:line
+        /* eslint-disable no-array-constructor */
+        var proto = new Array();
+        /* eslint-enable no-array-constructor */
 
-        window[type] = function(arg) {
+        window[type] = function (arg)
+        {
 
-            if (typeof(arg) === "number")
+            if (typeof(arg) === 'number')
             {
                 Array.call(this, arg);
                 this.length = arg;
@@ -151,34 +174,39 @@ if (typeof window.Uint32Array !== "function" && typeof window.Uint32Array !== "o
 if (!window.console)
 {
     window.console = {};
-    window.console.log = window.console.assert = function(){};
-    window.console.warn = window.console.assert = function(){};
+    window.console.log = window.console.assert = function () {};
+    window.console.warn = window.console.assert = function () {};
 }
 
 /**
  * Fix for Object.assign not existing on older devices
  */
 
-if (!Object.assign) {
-    /* jshint -W098 */
+if (!Object.assign)
+{
     // We include `varArgs` (unused) to ensure Object.assign.length === 2
-    Object.assign = function(target, varArgs) {
-    /* jshint +W098 */
+    Object.assign = function (target, varArgs) // eslint-disable-line no-unused-vars
+    {
         'use strict';
-        if (target == null) { // TypeError if undefined or null
+        if (target == null)
+        { // TypeError if undefined or null
             throw new TypeError('Cannot convert undefined or null to object');
         }
 
         var to = Object(target);
         var hasOwn = Object.prototype.hasOwnProperty;
 
-        for (var index = 1; index < arguments.length; index++) {
+        for (var index = 1; index < arguments.length; index++)
+        {
             var nextSource = arguments[index];
 
-            if (nextSource != null) { // Skip over if undefined or null
-                for (var nextKey in nextSource) {
+            if (nextSource != null)
+            { // Skip over if undefined or null
+                for (var nextKey in nextSource)
+                {
                     // Avoid bugs when hasOwnProperty is shadowed
-                    if (hasOwn.call(nextSource, nextKey)) {
+                    if (hasOwn.call(nextSource, nextKey))
+                    {
                         to[nextKey] = nextSource[nextKey];
                     }
                 }

@@ -477,6 +477,10 @@ Phaser.Video.prototype = {
         {
             this.video.mozSrcObject = stream;
         }
+        else if (this.video.srcObject !== undefined)
+        {
+            this.video.srcObject = stream;
+        }
         else
         {
             this.video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
@@ -793,6 +797,11 @@ Phaser.Video.prototype = {
             if (this.video.mozSrcObject)
             {
                 this.video.mozSrcObject.stop();
+                this.video.src = null;
+            }
+            else if (this.video.srcObject)
+            {
+                this.video.srcObject.stop();
                 this.video.src = null;
             }
             else
@@ -1214,7 +1223,7 @@ Phaser.Video.prototype = {
 
         if (this.touchLocked)
         {
-            this.game.input.touch.removeTouchLockCallback(this.unlock, this);
+            this.game.input.removeTouchLockCallback(this.unlock, this);
         }
 
         if (this._retryID)

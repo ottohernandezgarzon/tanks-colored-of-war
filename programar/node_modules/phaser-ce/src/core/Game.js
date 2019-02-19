@@ -534,7 +534,7 @@ Phaser.Game = function (width, height, renderer, parent, state, transparent, ant
 * @property {number|string}      [GameConfig.antialias=true]
 * @property {number|string}      [GameConfig.backgroundColor=0]             - Sets {@link Phaser.Stage#backgroundColor}.
 * @property {HTMLCanvasElement}  [GameConfig.canvas]                        - An existing canvas to display the game in.
-* @property {string}             [GameConfig.canvasId]                      - `id` attribute value to assign to the game canvas.
+* @property {string}             [GameConfig.canvasID]                      - `id` attribute value to assign to the game canvas.
 * @property {string}             [GameConfig.canvasStyle]                   - `style` attribute value to assign to the game canvas.
 * @property {boolean}            [GameConfig.clearBeforeRender=true]        - Sets {@link Phaser.Game#clearBeforeRender}.
 * @property {boolean}            [GameConfig.crisp=false]                   - Sets the canvas's `image-rendering` property to `pixelated` or `crisp-edges`. See {@link Phaser.Canvas.setImageRenderingCrisp}.
@@ -725,7 +725,9 @@ Phaser.Game.prototype = {
         }
         else
         {
-            this.debug = { preUpdate: function () {}, update: function () {}, reset: function () {}, isDisabled: true };
+            var noop = function () {};
+
+            this.debug = { preUpdate: noop, update: noop, reset: noop, destroy: noop, isDisabled: true };
         }
 
         this.showDebugHeader();
@@ -890,6 +892,7 @@ Phaser.Game.prototype = {
             }
             catch (webGLRendererError)
             {
+                PIXI.defaultRenderer = null;
                 this.renderer = null;
                 this.multiTexture = false;
                 PIXI._enableMultiTextureToggle = false;
@@ -1235,11 +1238,7 @@ Phaser.Game.prototype = {
 
         this.raf.stop();
 
-        if (this.debug.destroy)
-        {
-            this.debug.destroy();
-        }
-
+        this.debug.destroy();
         this.state.destroy();
         this.sound.destroy();
         this.scale.destroy();
@@ -1247,6 +1246,7 @@ Phaser.Game.prototype = {
         this.input.destroy();
         this.physics.destroy();
         this.plugins.destroy();
+        this.tweens.destroy();
 
         this.debug = null;
         this.state = null;
@@ -1256,6 +1256,7 @@ Phaser.Game.prototype = {
         this.input = null;
         this.physics = null;
         this.plugins = null;
+        this.tweens = null;
 
         this.cache = null;
         this.load = null;
@@ -1268,6 +1269,10 @@ Phaser.Game.prototype = {
 
         Phaser.Canvas.removeFromDOM(this.canvas);
 
+        if (PIXI.game === this)
+        {
+            PIXI.game = null;
+        }
         PIXI.defaultRenderer = null;
 
         Phaser.GAMES[this.id] = null;
@@ -1425,7 +1430,10 @@ Object.defineProperty(Phaser.Game.prototype, 'paused', {
             if (this._paused === false)
             {
                 this._paused = true;
-                this.sound.setMute();
+                if (this.sound.muteOnPause)
+                {
+                    this.sound.setMute();
+                }
                 this.time.gamePaused();
                 this.onPause.dispatch(this);
             }

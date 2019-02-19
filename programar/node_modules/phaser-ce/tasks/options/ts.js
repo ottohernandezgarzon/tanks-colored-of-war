@@ -4,12 +4,8 @@ module.exports = {
         noImplicitAny: true
     },
 
-    comments: {
-        src: "./typescript/{phaser,pixi}.comments.d.ts"
-    },
+    comments: {src: './typescript/{phaser,pixi}.comments.d.ts'},
 
-    defs: {
-        src: "./typescript/{phaser,pixi}.d.ts"
-    }
+    defs: {src: './typescript/{phaser,pixi}.d.ts'}
 
 };
